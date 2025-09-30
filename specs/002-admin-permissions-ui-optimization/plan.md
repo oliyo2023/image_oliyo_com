@@ -1,8 +1,7 @@
+# Implementation Plan: Admin Permissions and UI Optimization
 
-# Implementation Plan: [FEATURE]
-
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `002-admin-permissions-ui-optimization` | **Date**: 2025-10-01 | **Spec**: [E:\project\oliyo.com\specs\002-admin-permissions-ui-optimization\spec.md]
+**Input**: Feature specification from `/specs/002-admin-permissions-ui-optimization/spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -31,29 +30,35 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-[Extract from feature spec: primary requirement + technical approach from research]
+Implementation of a role-based access control (RBAC) system with fine-grained permissions for admin users, with full personalization of the admin interface including custom widgets, dashboard layout, and color schemes. The system will enforce permission checks at both UI and API levels, provide comprehensive audit logging, and implement first-come first-served locking for concurrent access to admin resources. The admin interface will load within 1-2 seconds to meet standard performance expectations.
 
 ## Technical Context
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript 5.0+, JavaScript ES2022  
+**Primary Dependencies**: Next.js 14+, React 18+, Node.js 18+, Prisma ORM, PostgreSQL  
+**Storage**: PostgreSQL database via Prisma ORM for roles, permissions, and audit logs  
+**Testing**: Jest, React Testing Library, Playwright for end-to-end tests  
+**Target Platform**: Web application (Next.js App Router with SSR/Static generation)  
+**Project Type**: Web application following existing project structure  
+**Performance Goals**: Admin interface pages load within 1-2 seconds to meet standard performance expectations, Core Web Vitals compliant (90/90/90 - LCP/FID/CLS)  
+**Constraints**: Custom role-based system with fine-grained permissions, comprehensive audit logging with before/after values, IP tracking, session information  
+**Scale/Scope**: Designed for multiple admin users with different permission levels accessing the system simultaneously
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Based on oliyo.com Constitution v1.0.0:
+- Modern Full-Stack Architecture: Next.js framework with TypeScript unified codebase using API routes (COMPLIANT)
+- Component-First Development: React components with defined interfaces (COMPLIANT)
+- Test-Driven Development: Jest, React Testing Library, Playwright required (COMPLIANT)
+- Performance Optimization: Core Web Vitals compliance, Next.js Image optimization (COMPLIANT)
+- Security-First Approach: Input validation, authentication, environment variables, secure role-based access (COMPLIANT)
+- Technology Stack: Next.js 14+, React 18+, Node.js 18+, TypeScript 5+ (COMPLIANT)
 
 ## Project Structure
 
 ### Documentation (this feature)
 ```
-specs/[###-feature]/
+specs/002-admin-permissions-ui-optimization/
 ├── plan.md              # This file (/plan command output)
 ├── research.md          # Phase 0 output (/plan command)
 ├── data-model.md        # Phase 1 output (/plan command)
@@ -63,50 +68,45 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 ```
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+├── app/
+│   ├── admin/
+│   │   ├── page.tsx
+│   │   ├── articles/
+│   │   ├── users/
+│   │   ├── permissions/
+│   │   └── dashboard/
+│   ├── api/
+│   │   └── admin/
+│   │       ├── articles/
+│   │       ├── users/
+│   │       ├── permissions/
+│   │       └── audit-logs/
+│   ├── components/
+│   │   ├── admin/
+│   │   ├── auth/
+│   │   └── shared/
+│   ├── lib/
+│   │   ├── auth.ts
+│   │   ├── permissions.ts
+│   │   ├── db.ts
+│   │   └── validations.ts
+│   ├── types/
+│   │   ├── user.types.ts
+│   │   ├── permission.types.ts
+│   │   └── audit.types.ts
+│   └── hooks/
+│       ├── usePermissions.ts
+│       └── useRoleManagement.ts
 
 tests/
-├── contract/
+├── unit/
 ├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+└── contract/
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Web application following Next.js 14+ App Router conventions with unified TypeScript codebase. API routes manage server-side logic for permissions and audit logging while React components handle client-side interactions for admin interface with full personalization capabilities. This structure follows constitutional principles of unified codebase with clear separation between client and server code through Next.js conventions.
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -194,9 +194,6 @@ directories captured above]
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
-
 
 ## Progress Tracking
 *This checklist is updated during execution flow*
