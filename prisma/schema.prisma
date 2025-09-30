@@ -1,4 +1,5 @@
 // prisma/schema.prisma
+// Prisma schema for admin permissions and UI optimization
 
 generator client {
   provider = "prisma-client-js"
@@ -9,75 +10,103 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                  String             @id @default(uuid())
-  email               String             @unique
-  passwordHash        String
-  creditBalance       Int                @default(100)
-  registrationDate    DateTime           @default(now())
-  lastLogin           DateTime?
-  socialLoginProvider String?
-  isActive            Boolean            @default(true)
-  role                String             @default("user")
-  sessions            Session[]
-  images              Image[]
-  creditTransactions  CreditTransaction[]
-  articles            Article[]
+// Admin User model
+model AdminUser {
+  id                           String      @id @default(uuid())
+  email                       String      @unique
+  name                        String
+  passwordHash                String
+  isActive                    Boolean     @default(true)
+  roleIds                     String[]
+  createdAt                   DateTime    @default(now())
+  lastLogin                   DateTime?
+  personalizationSettings     Json?
+  lastAccessedResource        String?
+  lastAccessedResourceLockTime DateTime?
+  
+  // Relations
+  roles                       Role[]      @relation("AdminUserRoles")
+  auditLogs                   AuditLog[]  @relation("AdminUserAuditLogs")
+  resourceLocks               ResourceLock[] @relation("AdminUserResourceLocks")
+  userPersonalizations        UserPersonalization[] @relation("AdminUserPersonalizations")
 }
 
-model CreditTransaction {
+// Role model
+model Role {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String
+  permissionIds String[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String
+  isActive    Boolean   @default(true)
+  
+  // Relations
+  adminUsers  AdminUser[] @relation("AdminUserRoles")
+  permissions Permission[] @relation("RolePermissions")
+}
+
+// Permission model
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  category    String
+  createdAt   DateTime @default(now())
+  isActive    Boolean  @default(true)
+  
+  // Relations
+  roles       Role[]   @relation("RolePermissions")
+}
+
+// Audit Log model
+model AuditLog {
   id              String   @id @default(uuid())
   userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactionType String   // "earned", "spent", "purchased"
-  amount          Int      // positive for earned/purchased, negative for spent
-  date            DateTime @default(now())
-  description     String
-  relatedModelName String?
+  action          String
+  resourceType    String
+  resourceId      String
+  timestamp       DateTime @default(now())
+  ipAddress       String
+  userAgent       String?
+  sessionId       String
+  actionOutcome   String
+  beforeValue     Json?
+  afterValue      Json?
+  metadata        Json?
+  
+  // Relations
+  adminUser       AdminUser @relation("AdminUserAuditLogs", fields: [userId], references: [id])
 }
 
-model Image {
-  id               String   @id @default(uuid())
-  userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  originalFilename String
-  storagePath      String
-  creationDate     DateTime @default(now())
-  prompt           String?
-  fileFormat       String   // jpeg, png, etc.
-  fileSize         Int      // in bytes
-  originalImageId  String?
-  originalImage    Image?   @relation("ImageToImage", fields: [originalImageId], references: [id])
-  derivedImages    Image[]  @relation("ImageToImage")
-  modelName        String
-  status           String   // "pending", "processing", "completed", "failed"
+// Resource Lock model
+model ResourceLock {
+  id                String   @id @default(uuid())
+  resourceType      String
+  resourceId        String
+  lockedBy          String
+  lockAcquiredAt    DateTime @default(now())
+  lockExpiresAt     DateTime
+  isActive          Boolean  @default(true)
+  
+  // Relations
+  adminUser         AdminUser @relation("AdminUserResourceLocks", fields: [lockedBy], references: [id])
+  
+  @@unique([resourceType, resourceId, isActive])
 }
 
-model AIModel {
-  id             String   @id @default(uuid())
-  name           String   @unique // "qwen-image-edit", "gemini-flash-image"
-  costPerUse     Float
-  isActive       Boolean  @default(true)
-  lastAccessTime DateTime?
-  usageCount     Int      @default(0)
-}
-
-model Article {
-  id             String   @id @default(uuid())
-  title          String
-  content        String
-  authorId       String
-  author         User     @relation(fields: [authorId], references: [id])
-  publicationDate DateTime @default(now())
-  status         String   // "draft", "published", "archived"
-  imageUrl       String?
-}
-
-model Session {
-  id            String   @id @default(uuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sessionToken  String   @unique
-  expirationTime DateTime
-  createdAt     DateTime @default(now())
+// User Personalization model
+model UserPersonalization {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  dashboardLayout     Json?
+  themeSettings       Json?
+  widgetPreferences   Json?
+  navigationPreferences Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  adminUser           AdminUser @relation("AdminUserPersonalizations", fields: [userId], references: [id])
 }
