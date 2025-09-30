@@ -35,6 +35,11 @@
 - Q: How should the system handle concurrent access to the same admin resource by multiple users? → A: First-come, first-served locking (first user gets exclusive access)
 - Q: What performance expectations should the admin interface meet? → A: Standard performance (pages load within 1-2 seconds)
 - Q: For the audit logging requirement, what level of detail is required? → A: Comprehensive logs (all standard data plus before/after values, IP, session info)
+- Q: What specific data types should be searchable and filterable in the admin panel? → A: User accounts, roles, and permissions only
+- Q: What navigation patterns should be implemented for the admin interface? → A: Sidebar navigation with collapsible menu items
+- Q: What key metrics and system status information should be displayed on the admin dashboard? → A: Comprehensive set including all of the above
+- Q: How should the system handle permission changes for users who are currently logged in? → A: Apply changes immediately, potentially restricting access mid-session
+- Q: What level of accessibility should the admin interface support? → A: Basic level - support keyboard navigation and basic screen reader functionality
 
 ---
 
@@ -76,9 +81,9 @@ When creating this spec from a user prompt:
 5. **Given** I am performing administrative tasks, **When** I make changes to user data or system settings, **Then** I should receive clear feedback about the success or failure of my actions.
 
 ### Edge Cases
-- What happens when a user's permissions are changed while they are actively using the system?
 - How does the system handle admin users with different permission levels trying to access the same resource?
 - When multiple admins try to access the same resource, the first user gets exclusive access with a locking mechanism
+- When a user's permissions are changed while they are actively using the system, changes are applied immediately which may restrict their access mid-session
 
 ## Requirements *(mandatory)*
 
@@ -88,14 +93,15 @@ When creating this spec from a user prompt:
 - **FR-003**: Users MUST be able to only access features and data that their assigned role permits based on the fine-grained permission system
 - **FR-004**: System MUST enforce permission checks at both the UI level and API level
 - **FR-005**: System MUST provide comprehensive audit logging for all administrative actions, including user identity, timestamp, action performed, target resource, action outcome, IP address, session information, and before/after values for any modified data
-- **FR-006**: System MUST provide an intuitive navigation system that allows admins to efficiently find and access required functionality [NEEDS CLARIFICATION: specific UI layout or navigation patterns not specified]
+- **FR-006**: System MUST provide an intuitive navigation system using sidebar navigation with collapsible menu items that allows admins to efficiently find and access required functionality
 - **FR-007**: System MUST provide visual feedback for all admin actions (success, error, loading states)
 - **FR-008**: System MUST support full personalization of the admin interface including custom widgets, dashboard layout, and color schemes as per user preferences
-- **FR-009**: System MUST provide search and filtering capabilities for admin panel data views [NEEDS CLARIFICATION: specific data types to be searchable/filterable not specified]
-- **FR-010**: System MUST provide dashboard views with key metrics and system status information [NEEDS CLARIFICATION: specific metrics and data to be displayed not specified]
+- **FR-009**: System MUST provide search and filtering capabilities for admin panel data views, specifically for user accounts, roles, and permissions
+- **FR-010**: System MUST provide dashboard views with comprehensive key metrics and system status information including user activity metrics, system performance metrics, and business metrics
 
 ### Non-Functional Requirements
 - **NFR-001**: Admin interface pages MUST load within 1-2 seconds to meet standard performance expectations
+- **NFR-002**: Admin interface MUST support basic accessibility including keyboard navigation and screen reader functionality
 
 ### Key Entities
 - **Admin User**: Represents an administrative account with specific permissions and role assignments
