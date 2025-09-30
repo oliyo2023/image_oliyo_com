@@ -1,0 +1,47 @@
+{
+  "name": "oliyo-image-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "npx prisma generate",
+    "db:migrate": "npx prisma migrate dev --name init",
+    "db:check": "node scripts/check-db-connection.js",
+    "db:init": "node scripts/init-db.js",
+    "user:create-test": "node scripts/create-test-user.js",
+    "test": "node scripts/run-tests.js",
+    "test:unit": "node scripts/run-tests.js unit",
+    "test:integration": "node scripts/run-tests.js integration",
+    "test:contract": "node scripts/run-tests.js contract",
+    "test:e2e": "node scripts/run-tests.js e2e"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.899.0",
+    "@aws-sdk/s3-request-presigner": "^3.899.0",
+    "@prisma/client": "^5.0.0",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/jsonwebtoken": "^9.0.1",
+    "autoprefixer": "^10.4.21",
+    "bcryptjs": "^2.4.3",
+    "jose": "^6.1.0",
+    "jsonwebtoken": "^9.0.0",
+    "next": "^14.0.0",
+    "prisma": "^5.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "redis": "^4.6.0",
+    "stripe": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0",
+    "typescript": "^5.0.0"
+  }
+}

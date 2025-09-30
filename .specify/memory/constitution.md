@@ -1,50 +1,42 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!-- 
+SYNC IMPACT REPORT
+Version change: N/A → 1.0.0
+Modified principles: N/A
+Added sections: All principles (new constitution)
+Removed sections: N/A
+Templates requiring updates: ✅ .specify/templates/plan-template.md updated
+Follow-up TODOs: RATIFICATION_DATE needs to be set to actual project start date
+-->
+
+# oliyo.com Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### Modern Full-Stack Architecture
+Next.js framework drives both frontend and backend development with unified TypeScript codebase; API routes manage server-side logic while React components handle client-side interactions; Clear separation between client and server code maintained through Next.js conventions.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### Component-First Development
+All UI elements start as reusable React components with defined props interfaces; Components are self-contained with their styling, logic, and tests; Shared components stored in dedicated library directories with documented usage guidelines.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### Test-Driven Development (NON-NEGOTIABLE)
+All features require unit tests before implementation begins; Jest and React Testing Library used for component testing; End-to-end tests written with Cypress or Playwright for critical user flows; Code coverage minimum of 80% required for all new code.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### Performance Optimization
+All pages must meet Core Web Vitals thresholds; Image optimization using Next.js Image component required; Server-side rendering and static generation leveraged appropriately for performance; Bundle size monitored and minimized with webpack-bundle-analyzer.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### Security-First Approach
+All user inputs validated and sanitized server-side; Authentication and authorization implemented consistently across all routes; Environment variables used for all sensitive configuration; Content Security Policy implemented to prevent XSS attacks.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Additional Constraints
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+Technology stack requirements: Next.js 14+, React 18+, Node.js 18+, TypeScript 5+; All dependencies must be actively maintained with regular security updates; Database integration follows Next.js recommended patterns (Prisma, Drizzle, etc.); Deployment to Vercel or equivalent Next.js-optimized platform.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Code review required for all PRs with minimum 1 approval; Feature flags used for incomplete functionality; Branch naming follows convention: feature/issue-number-description, bugfix/issue-number-description, or hotfix/issue-number-description; All code must pass linting, formatting (Prettier), and tests before merging.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other development practices; Amendments require team consensus and documented approval; All PRs and code reviews must verify compliance with these principles; Configuration follows Next.js recommended best practices.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: TODO(RATIFICATION_DATE): Date project was established | **Last Amended**: 2025-09-30

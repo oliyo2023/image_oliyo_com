@@ -1,8 +1,8 @@
 
-# Implementation Plan: [FEATURE]
+# Implementation Plan: AI Image Generation and Editing Website
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `001-qwen-image-edit` | **Date**: 2025-09-30 | **Spec**: [E:\project\oliyo.com\specs\001-qwen-image-edit\spec.md]
+**Input**: Feature specification from `/specs/001-qwen-image-edit/spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -31,29 +31,35 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-[Extract from feature spec: primary requirement + technical approach from research]
+Development of a full-stack web application that allows users to generate and edit images using AI models (qwen-image-edit, gemini-flash-image). The system includes a credit-based usage model where users receive 100 credits upon registration and consume credits for image operations, with the option to purchase more. The platform features user registration/login with optional social authentication, image upload and editing capabilities, and an admin backend for user management and analytics. The architecture follows Next.js best practices with TypeScript, component-first development, and performance optimization.
 
 ## Technical Context
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript 5.0+, JavaScript ES2022  
+**Primary Dependencies**: Next.js 14+, React 18+, Node.js 18+, Prisma ORM, Stripe for payments, AWS S3 for image storage  
+**Storage**: PostgreSQL database via Prisma ORM, secure cloud storage for images (AWS S3)  
+**Testing**: Jest, React Testing Library, Playwright for end-to-end tests  
+**Target Platform**: Web application (Next.js App Router with SSR/Static generation)  
+**Project Type**: Web application (unified Next.js codebase with API routes)  
+**Performance Goals**: Core Web Vitals compliant (90/90/90 - LCP/FID/CLS), image generation within 60s for 95% of requests, API response times under 2s for 95% of requests  
+**Constraints**: Image file size up to 50MB, dynamically scaled infrastructure, AI model integration rate limits  
+**Scale/Scope**: Auto-scaling based on demand, designed for 100+ concurrent users
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Based on oliyo.com Constitution v1.0.0:
+- Modern Full-Stack Architecture: Next.js framework with TypeScript unified codebase using API routes (COMPLIANT)
+- Component-First Development: React components with defined interfaces (COMPLIANT)
+- Test-Driven Development: Jest, React Testing Library, Playwright required (COMPLIANT)
+- Performance Optimization: Core Web Vitals compliance, Next.js Image optimization (COMPLIANT)
+- Security-First Approach: Input validation, authentication, environment variables, secure image storage (COMPLIANT)
+- Technology Stack: Next.js 14+, React 18+, Node.js 18+, TypeScript 5+ (COMPLIANT)
 
 ## Project Structure
 
 ### Documentation (this feature)
 ```
-specs/[###-feature]/
+specs/001-qwen-image-edit/
 ├── plan.md              # This file (/plan command output)
 ├── research.md          # Phase 0 output (/plan command)
 ├── data-model.md        # Phase 1 output (/plan command)
@@ -63,50 +69,69 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 ```
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
+├── app/                 # Next.js 13+ App Router structure
+│   ├── api/
+│   │   ├── auth/
+│   │   │   ├── register/route.ts
+│   │   │   ├── login/route.ts
+│   │   │   ├── login-social/route.ts
+│   │   │   ├── profile/route.ts
+│   │   │   └── logout/route.ts
+│   │   ├── images/
+│   │   │   ├── generate/route.ts
+│   │   │   ├── edit/route.ts
+│   │   │   └── [...slug]/route.ts
+│   │   ├── credits/
+│   │   │   ├── balance/route.ts
+│   │   │   ├── transactions/route.ts
+│   │   │   ├── purchase-intent/route.ts
+│   │   │   └── purchase-confirm/route.ts
+│   │   └── admin/
+│   │       ├── users/route.ts
+│   │       ├── analytics/route.ts
+│   │       ├── transactions/route.ts
+│   │       ├── articles/route.ts
+│   │       └── articles/[id]/route.ts
 │   ├── components/
-│   ├── pages/
-│   └── services/
+│   │   ├── auth/
+│   │   ├── image-editor/
+│   │   ├── dashboard/
+│   │   ├── admin/
+│   │   └── shared/
+│   ├── lib/             # Shared utilities and services
+│   │   ├── db.ts        # Database connection
+│   │   ├── auth.ts      # Authentication utilities
+│   │   ├── s3.ts        # S3 client
+│   │   ├── stripe.ts    # Stripe client
+│   │   ├── ai-models.ts # AI model integration
+│   │   └── validations.ts # Validation utilities
+│   ├── hooks/
+│   │   ├── useAuth.ts
+│   │   └── useImageGeneration.ts
+│   ├── types/
+│   │   ├── user.types.ts
+│   │   ├── image.types.ts
+│   │   └── credit.types.ts
+│   └── dashboard/
+│       ├── page.tsx
+│       ├── generate-image/page.tsx
+│       ├── edit-image/page.tsx
+│       └── purchase-credits/page.tsx
+│   └── admin/
+│       ├── page.tsx
+│       ├── users/page.tsx
+│       ├── analytics/page.tsx
+│       └── articles/page.tsx
+├── middleware.ts        # Next.js middleware for auth and rate limiting
 └── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+    ├── unit/
+    ├── integration/
+    └── e2e/
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Web application following Next.js 14+ App Router conventions with unified TypeScript codebase. API routes manage server-side logic while React components handle client-side interactions. This structure follows constitutional principles of unified codebase with clear separation between client and server code through Next.js conventions.
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -120,6 +145,10 @@ directories captured above]
      Task: "Research {unknown} for {feature context}"
    For each technology choice:
      Task: "Find best practices for {tech} in {domain}"
+   For AI model integrations:
+     Task: "Research qwen-image-edit and gemini-flash-image API integration patterns"
+   For payment processing:
+     Task: "Research Stripe integration best practices for credit purchases"
    ```
 
 3. **Consolidate findings** in `research.md` using format:
@@ -194,26 +223,24 @@ directories captured above]
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
-
+| [API Rate Limiting] | [High volume AI model requests could incur excessive costs] | [Without rate limiting, users could abuse the system and cause high costs] |
 
 ## Progress Tracking
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [ ] Phase 0: Research complete (/plan command)
-- [ ] Phase 1: Design complete (/plan command)
-- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
+- [x] Phase 0: Research complete (/plan command)
+- [x] Phase 1: Design complete (/plan command)
+- [x] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-- [ ] Initial Constitution Check: PASS
-- [ ] Post-Design Constitution Check: PASS
-- [ ] All NEEDS CLARIFICATION resolved
-- [ ] Complexity deviations documented
+- [x] Initial Constitution Check: PASS
+- [x] Post-Design Constitution Check: PASS
+- [x] All NEEDS CLARIFICATION resolved
+- [x] Complexity deviations documented
 
 ---
 *Based on oliyo.com Constitution v1.0.0 - See `.specify/memory/constitution.md`*

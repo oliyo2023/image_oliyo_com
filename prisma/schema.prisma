@@ -1,0 +1,83 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String             @id @default(uuid())
+  email               String             @unique
+  passwordHash        String
+  creditBalance       Int                @default(100)
+  registrationDate    DateTime           @default(now())
+  lastLogin           DateTime?
+  socialLoginProvider String?
+  isActive            Boolean            @default(true)
+  role                String             @default("user")
+  sessions            Session[]
+  images              Image[]
+  creditTransactions  CreditTransaction[]
+  articles            Article[]
+}
+
+model CreditTransaction {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactionType String   // "earned", "spent", "purchased"
+  amount          Int      // positive for earned/purchased, negative for spent
+  date            DateTime @default(now())
+  description     String
+  relatedModelName String?
+}
+
+model Image {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  originalFilename String
+  storagePath      String
+  creationDate     DateTime @default(now())
+  prompt           String?
+  fileFormat       String   // jpeg, png, etc.
+  fileSize         Int      // in bytes
+  originalImageId  String?
+  originalImage    Image?   @relation("ImageToImage", fields: [originalImageId], references: [id])
+  derivedImages    Image[]  @relation("ImageToImage")
+  modelName        String
+  status           String   // "pending", "processing", "completed", "failed"
+}
+
+model AIModel {
+  id             String   @id @default(uuid())
+  name           String   @unique // "qwen-image-edit", "gemini-flash-image"
+  costPerUse     Float
+  isActive       Boolean  @default(true)
+  lastAccessTime DateTime?
+  usageCount     Int      @default(0)
+}
+
+model Article {
+  id             String   @id @default(uuid())
+  title          String
+  content        String
+  authorId       String
+  author         User     @relation(fields: [authorId], references: [id])
+  publicationDate DateTime @default(now())
+  status         String   // "draft", "published", "archived"
+  imageUrl       String?
+}
+
+model Session {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionToken  String   @unique
+  expirationTime DateTime
+  createdAt     DateTime @default(now())
+}
