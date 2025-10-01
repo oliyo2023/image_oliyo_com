@@ -437,7 +437,7 @@ export default function Docs() {
                               {'  '}"success": true,\n
                               {'  '}"message": "Operation completed successfully",\n
                               {'  '}"data": '{' /* Response data */ '}'\n
-                              '}'
+                              {'}'}
                             </pre>
                           </div>
                           

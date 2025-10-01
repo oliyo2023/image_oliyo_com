@@ -359,3 +359,151 @@ export async function authenticateAPIKey(request: NextRequest): Promise<any | nu
     return null;
   }
 }
+
+/**
+ * Validate and sanitize URL parameters
+ * @param params - URL parameters object
+ * @returns Object - Validated and sanitized parameters
+ */
+export function validateAndSanitizeURLParams(params: any): any {
+  const sanitizedParams: any = {};
+
+  for (const key in params) {
+    if (params.hasOwnProperty(key) && params[key] !== null && params[key] !== undefined) {
+      const value = params[key];
+      
+      // Sanitize string values
+      if (typeof value === 'string') {
+        sanitizedParams[key] = value
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#x27;')
+          .trim();
+      } 
+      // Parse numeric values
+      else if (typeof value === 'string' && !isNaN(Number(value))) {
+        sanitizedParams[key] = Number(value);
+      } 
+      // Parse boolean values
+      else if (value === 'true' || value === 'false') {
+        sanitizedParams[key] = value === 'true';
+      }
+      // Pass through other values (numbers, booleans, etc.)
+      else {
+        sanitizedParams[key] = value;
+      }
+    }
+  }
+
+  return sanitizedParams;
+}
+
+/**
+ * Validate date range parameters
+ * @param startDate - Start date parameter
+ * @param endDate - End date parameter
+ * @param maxDays - Maximum number of days allowed in range (default: 365)
+ * @returns Object - Validated date range or error
+ */
+export function validateDateRange(
+  startDate: any,
+  endDate: any,
+  maxDays: number = 365
+): { isValid: boolean; startDate?: Date; endDate?: Date; error?: string } {
+  try {
+    // If no dates provided, return valid with no dates
+    if (!startDate && !endDate) {
+      return {
+        isValid: true
+      };
+    }
+
+    // Parse dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Check if dates are valid
+    if (startDate && isNaN(start.getTime())) {
+      return {
+        isValid: false,
+        error: 'Invalid start date'
+      };
+    }
+
+    if (endDate && isNaN(end.getTime())) {
+      return {
+        isValid: false,
+        error: 'Invalid end date'
+      };
+    }
+
+    // If only start date provided
+    if (startDate && !endDate) {
+      return {
+        isValid: true,
+        startDate: start
+      };
+    }
+
+    // If only end date provided
+    if (!startDate && endDate) {
+      return {
+        isValid: true,
+        endDate: end
+      };
+    }
+
+    // Ensure start date is before end date
+    if (start > end) {
+      return {
+        isValid: false,
+        error: 'Start date must be before end date'
+      };
+    }
+
+    // Check date range is not too large
+    const timeDiff = end.getTime() - start.getTime();
+    const dayDiff = timeDiff / (1000 * 3600 * 24);
+
+    if (dayDiff > maxDays) {
+      return {
+        isValid: false,
+        error: `Date range cannot exceed ${maxDays} days`
+      };
+    }
+
+    return {
+      isValid: true,
+      startDate: start,
+      endDate: end
+    };
+  } catch (error) {
+    return {
+      isValid: false,
+      error: 'Error validating date range'
+    };
+  }
+}
+
+/**
+ * Validate pagination parameters
+ * @param limit - Limit parameter
+ * @param offset - Offset parameter
+ * @returns Object - Validated pagination parameters
+ */
+export function validatePaginationParams(limit: any, offset: any): { limit: number; offset: number } {
+  // Convert to numbers
+  const limitNum = parseInt(limit, 10);
+  const offsetNum = parseInt(offset, 10);
+
+  // Set defaults if invalid
+  const validatedLimit = isNaN(limitNum) || limitNum <= 0 || limitNum > 100 ? 20 : limitNum;
+  const validatedOffset = isNaN(offsetNum) || offsetNum < 0 ? 0 : offsetNum;
+
+  return {
+    limit: validatedLimit,
+    offset: validatedOffset
+  };
+}

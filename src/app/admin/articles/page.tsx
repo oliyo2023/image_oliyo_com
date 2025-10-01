@@ -1,4 +1,6 @@
 // src/app/admin/articles/page.tsx
+// Admin Articles Management Page
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -19,7 +21,7 @@ interface Article {
 }
 
 export default function AdminArticles() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [articles, setArticles] = useState<Article[]>([]);
   const [newArticle, setNewArticle] = useState({
@@ -51,7 +53,7 @@ export default function AdminArticles() {
     .then(data => {
       if (data.id) {
         setUser(data);
-        // Check if user is admin
+        // Check if user has admin role
         if (data.role !== 'admin') {
           // Redirect non-admin users
           router.push('/dashboard');

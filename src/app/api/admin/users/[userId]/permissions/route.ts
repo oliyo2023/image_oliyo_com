@@ -3,7 +3,8 @@
 
 import { NextRequest } from 'next/server';
 import { authenticateAdmin, checkPermission, logAuditAction } from '@/middleware';
-import { getUserPermissions, getAdminUserById } from '@/lib/permissions';
+import { getUserPermissions } from '@/lib/permissions';
+import { getAdminUserById } from '@/lib/admin-users';
 import { validateUUID } from '@/lib/validations';
 
 /**

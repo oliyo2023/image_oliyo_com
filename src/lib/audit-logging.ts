@@ -611,3 +611,24 @@ export async function getUserAuditLogs(
     };
   }
 }
+
+/**
+ * Alias for createAuditLog to match API route expectations
+ * @param logData - Object containing audit log data
+ * @returns Promise<Object> - Result of the log creation
+ */
+export async function createAuditLogEntry(logData: {
+  userId: string;
+  action: string;
+  resourceType: string;
+  resourceId: string;
+  ipAddress: string;
+  userAgent?: string;
+  sessionId: string;
+  actionOutcome: string;
+  beforeValue?: any;
+  afterValue?: any;
+  metadata?: any;
+}): Promise<any> {
+  return createAuditLog(logData);
+}

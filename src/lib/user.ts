@@ -386,6 +386,63 @@ export async function getAllArticles() {
   }
 }
 
+/**
+ * Get a specific article by ID
+ * @param articleId - ID of the article to retrieve
+ * @returns Promise<Object> - Article object or null if not found
+ */
+export async function getArticleById(articleId: string) {
+  try {
+    // Validate article ID
+    if (!articleId) {
+      return {
+        success: false,
+        message: 'Article ID is required'
+      };
+    }
+
+    // Get article with author information
+    const article = await db.article.findUnique({
+      where: { id: articleId },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    // Check if article exists
+    if (!article) {
+      return {
+        success: false,
+        message: 'Article not found'
+      };
+    }
+
+    return {
+      success: true,
+      article: {
+        id: article.id,
+        title: article.title,
+        content: article.content,
+        author: article.author,
+        publicationDate: article.publicationDate,
+        status: article.status,
+        imageUrl: article.imageUrl
+      }
+    };
+  } catch (error) {
+    console.error('Error getting article by ID:', error);
+    return {
+      success: false,
+      message: 'Failed to retrieve article'
+    };
+  }
+}
+
 // Update an article
 export async function updateArticle(articleId: string, updateData: { title?: string; content?: string; status?: string; imageUrl?: string }) {
   try {

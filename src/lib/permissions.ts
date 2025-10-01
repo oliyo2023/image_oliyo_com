@@ -264,3 +264,28 @@ export async function roleHasPermission(roleId: string, permissionName: string):
     return false;
   }
 }
+
+// Removed duplicate createRole function - keeping the first definition
+
+// Removed duplicate getAllRoles function - keeping the first definition
+
+/**
+ * Get a role by ID
+ * @param roleId - The ID of the role to retrieve
+ * @returns Promise<Object|null> - Role object or null if not found
+ */
+export async function getRoleById(roleId: string): Promise<any | null> {
+  try {
+    // Get role by ID
+    const role = await db.role.findUnique({
+      where: { id: roleId }
+    });
+
+    return role;
+  } catch (error) {
+    console.error('Error getting role by ID:', error);
+    return null;
+  }
+}
+
+// Removed duplicate updateRole function - keeping the first definition
