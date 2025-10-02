@@ -32,6 +32,10 @@ Authorization: Bearer {jwt_token}
 Authorization: Bearer {jwt_token}
 ```
 
+**Query Parameters**:
+- limit: Number of transactions to return (default: 20, max: 100)
+- offset: Number of transactions to skip (default: 0)
+
 **Success Response (200 OK)**:
 ```
 {

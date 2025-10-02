@@ -498,11 +498,21 @@ async function updateAdminUser(userId: string, updateData: any): Promise<any> {
     // Remove sensitive fields from update data
     const { passwordHash, id, createdAt, ...safeUpdateData } = updateData;
 
-    // Update the user
-    const updatedUser = await db.adminUser.update({
-      where: { id: userId },
-      data: safeUpdateData
-    });
+    // Update the user using the service function
+    const updateResult = await updateAdminUser(userId, safeUpdateData);
+    if (!updateResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: updateResult.message || 'Failed to update user' 
+        }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    const updatedUser = updateResult.user;
 
     // Remove password hash from response for security
     const { passwordHash: _, ...userWithoutPassword } = updatedUser;

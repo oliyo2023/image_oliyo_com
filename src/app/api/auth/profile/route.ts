@@ -1,74 +1,56 @@
-// src/app/api/auth/profile/route.ts
 import { NextRequest } from 'next/server';
-import { authenticateToken, getUserProfile } from '@/lib/auth';
+import { verifyToken, getUserProfile } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
     // Extract token from Authorization header
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Authorization token required' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+      return Response.json(
+        { error: 'Unauthorized', message: 'Missing or invalid authorization header' },
+        { status: 401 }
       );
     }
-    
+
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    const user = await authenticateToken(token);
     
-    if (!user) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Invalid or expired token' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+    // Verify token
+    const tokenPayload = await verifyToken(token);
+    if (!tokenPayload) {
+      return Response.json(
+        { error: 'Unauthorized', message: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 
     // Get user profile
-    const profile = await getUserProfile(user.id);
+    const profile = await getUserProfile(tokenPayload.userId);
     
     if (!profile) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'User not found' 
-        }),
-        { 
-          status: 404,
-          headers: { 'Content-Type': 'application/json' }
-        }
+      return Response.json(
+        { error: 'User not found', message: 'The user associated with this token does not exist' },
+        { status: 404 }
       );
     }
 
-    return new Response(
-      JSON.stringify(profile),
+    // Return user profile
+    return Response.json({
+      id: profile.id,
+      email: profile.email,
+      creditBalance: profile.creditBalance,
+      registrationDate: profile.registrationDate,
+      lastLogin: profile.lastLogin,
+      socialLoginProvider: profile.socialLoginProvider,
+    });
+  } catch (error: any) {
+    // General error handling
+    console.error('Get profile error:', error);
+    return Response.json(
       { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  } catch (error) {
-    console.error('Error in profile endpoint:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'An internal server error occurred' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        error: 'Internal server error',
+        message: 'An unexpected error occurred while retrieving profile'
+      },
+      { status: 500 }
     );
   }
 }

@@ -1,47 +1,62 @@
-// src/app/api/auth/login/route.ts
 import { NextRequest } from 'next/server';
-import { loginUser } from '@/lib/auth';
+import { authenticateUser } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, password } = body;
 
-    // Validate input
+    // Validate request body
     if (!email || !password) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Email and password are required' 
-        }),
+      return Response.json(
         { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          error: 'Missing required fields', 
+          details: [
+            { field: 'email', message: 'Email is required' },
+            { field: 'password', message: 'Password is required' }
+          ] 
+        },
+        { status: 400 }
       );
     }
 
-    // Login the user
-    const result = await loginUser({ email, password });
+    // Attempt to authenticate the user
+    const result = await authenticateUser(email, password);
 
-    return new Response(
-      JSON.stringify(result),
+    if (result) {
+      // Login successful
+      return Response.json(
+        { 
+          success: true,
+          message: 'Login successful',
+          user: {
+            id: result.user.id,
+            email: result.user.email,
+            creditBalance: result.user.creditBalance,
+          },
+          token: result.token
+        },
+        { status: 200 }
+      );
+    } else {
+      // Authentication failed
+      return Response.json(
+        { 
+          error: 'Invalid credentials',
+          message: 'Email or password is incorrect'
+        },
+        { status: 401 }
+      );
+    }
+  } catch (error: any) {
+    // General error handling
+    console.error('Login error:', error);
+    return Response.json(
       { 
-        status: result.success ? 200 : 401,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  } catch (error) {
-    console.error('Error in login endpoint:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'An internal server error occurred' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        error: 'Internal server error',
+        message: 'An unexpected error occurred during login'
+      },
+      { status: 500 }
     );
   }
 }

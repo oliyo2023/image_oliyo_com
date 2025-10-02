@@ -1,0 +1,110 @@
+# API Contract: Image Operations
+
+## POST /api/images/generate
+Generate a new image from a text prompt using AI models
+
+### Request
+```json
+{
+  "prompt": "A beautiful landscape with mountains and lakes",
+  "aiModel": "qwen-image-edit",
+  "sessionToken": "jwt-token-string"
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": true,
+  "imageId": "uuid-string",
+  "imageUrl": "/api/images/download/[id]",
+  "creditsUsed": 5,
+  "finalCreditBalance": 90,
+  "message": "Image generated successfully"
+}
+```
+
+### Response (400 Bad Request)
+```json
+{
+  "success": false,
+  "error": "Invalid request parameters"
+}
+```
+
+### Response (402 Payment Required)
+```json
+{
+  "success": false,
+  "error": "Insufficient credits",
+  "requiredCredits": 5,
+  "currentCredits": 2
+}
+```
+
+---
+
+## POST /api/images/edit
+Edit an existing image using a text prompt and AI models
+
+### Request
+```json
+{
+  "imageId": "uuid-of-existing-image",
+  "prompt": "Add snow to the mountains in this image",
+  "aiModel": "gemini-flash-image",
+  "sessionToken": "jwt-token-string"
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": true,
+  "imageId": "uuid-string-for-edited-image",
+  "imageUrl": "/api/images/download/[id]",
+  "creditsUsed": 10,
+  "finalCreditBalance": 85,
+  "originalImageId": "uuid-of-existing-image",
+  "message": "Image edited successfully"
+}
+```
+
+### Response (400 Bad Request)
+```json
+{
+  "success": false,
+  "error": "Invalid request parameters"
+}
+```
+
+---
+
+## POST /api/images/upload
+Upload an image for later editing
+
+### Request (multipart/form-data)
+```json
+{
+  "file": "image-file-up-to-50MB",
+  "sessionToken": "jwt-token-string"
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": true,
+  "imageId": "uuid-string",
+  "filename": "original-filename.jpg",
+  "message": "Image uploaded successfully"
+}
+```
+
+### Response (413 Payload Too Large)
+```json
+{
+  "success": false,
+  "error": "File too large, maximum 50MB allowed"
+}
+```

@@ -1,8 +1,8 @@
 
-# Implementation Plan: [FEATURE]
+# Implementation Plan: AI Image Generation and Editing Website
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `001-qwen-image-edit` | **Date**: 2025-10-03 | **Spec**: [spec.md](./spec.md)
+**Input**: Feature specification from `E:\project\oliyo.com\specs\001-qwen-image-edit\spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -31,23 +31,29 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-[Extract from feature spec: primary requirement + technical approach from research]
+A Next.js-based web application that allows users to generate and edit images using AI models (qwen-image-edit and gemini-flash-image) with a credit-based system. The application features user authentication, image upload and generation capabilities, a credit management system, admin dashboard for user and model management, and article publishing functionality, all built with TypeScript following constitutional principles for security, performance, and test-driven development.
 
 ## Technical Context
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript 5+, Next.js 14+, Node.js 18+ (as per constitution)  
+**Primary Dependencies**: Next.js, React 18+, TypeScript, Vercel for deployment  
+**Storage**: To be determined based on project requirements (likely PostgreSQL with Prisma ORM as per constitution)
+**Testing**: Jest and React Testing Library for component testing, Cypress or Playwright for e2e tests (as per constitution)  
+**Target Platform**: Web application (as specified in feature spec)
+**Project Type**: Web application (frontend + backend in single Next.js project)  
+**Performance Goals**: Must meet Core Web Vitals thresholds (90 LCP, 90 FID, 90 CLS) with API response times under 2s for 95% of requests  
+**Constraints**: 95% uptime target, image generation within 60s for 95% of requests, support for 100+ concurrent users  
+**Scale/Scope**: Support for 100+ concurrent users, image file sizes up to 50MB, credit-based usage system
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [x] **Modern Full-Stack Architecture**: Using Next.js framework for both frontend and backend with unified TypeScript codebase as required
+- [x] **Component-First Development**: UI elements will be developed as reusable React components with defined props interfaces
+- [x] **Test-Driven Development**: All features will require unit tests before implementation with 80%+ coverage as required
+- [x] **Performance Optimization**: All pages will meet Core Web Vitals thresholds and use Next.js Image optimization
+- [x] **Security-First Approach**: Server-side validation, authentication/authorization, environment variables for sensitive config, CSP for XSS prevention
+- [x] **Technology Stack Compliance**: Using Next.js 14+, React 18+, Node.js 18+, TypeScript 5+ as required
+- [x] **Deployment**: Deploying to Vercel as specified in both constitution and feature spec
 
 ## Project Structure
 
@@ -63,50 +69,55 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 ```
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+# Next.js Web application structure
+pages/
+├── api/
+│   ├── auth/
+│   ├── users/
+│   ├── images/
+│   ├── credits/
+│   └── admin/
+├── auth/
+├── dashboard/
+├── editor/
+├── gallery/
+├── admin/
+└── _app.js
+│   └── _document.js
+
+components/
+├── ui/
+├── auth/
+├── image-editor/
+├── gallery/
+├── admin/
+└── common/
+
+public/
+├── images/
+├── uploads/
+└── icons/
+
+styles/
+├── globals.css
+└── components.css
+
+lib/
+├── db/
+├── auth/
+├── ai/
+├── utils/
+└── types/
 
 tests/
-├── contract/
+├── unit/
 ├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+├── contract/
+└── e2e/
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Web application using Next.js standard structure with pages directory for routing, components for reusable UI elements, lib for utilities and services, public for static assets, and tests for all testing types as required by the constitution.
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -202,17 +213,17 @@ directories captured above]
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [ ] Phase 0: Research complete (/plan command)
-- [ ] Phase 1: Design complete (/plan command)
-- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
+- [x] Phase 0: Research complete (/plan command)
+- [x] Phase 1: Design complete (/plan command)
+- [x] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-- [ ] Initial Constitution Check: PASS
-- [ ] Post-Design Constitution Check: PASS
-- [ ] All NEEDS CLARIFICATION resolved
+- [x] Initial Constitution Check: PASS
+- [x] Post-Design Constitution Check: PASS
+- [x] All NEEDS CLARIFICATION resolved
 - [ ] Complexity deviations documented
 
 ---

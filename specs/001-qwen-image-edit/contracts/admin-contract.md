@@ -6,12 +6,17 @@ API endpoints for admin users to manage the platform, users, and content.
 ## Endpoints
 
 ### GET /api/admin/users
-**Description**: Get list of all users with basic information
+**Description**: Get list of all registered users with pagination
 
 **Headers**:
 ```
 Authorization: Bearer {jwt_token}
 ```
+
+**Query Parameters**:
+- limit: Number of users to return (default: 20, max: 100)
+- offset: Number of users to skip (default: 0)
+- search: Search term to filter users by email (optional)
 
 **Success Response (200 OK)**:
 ```
@@ -19,11 +24,12 @@ Authorization: Bearer {jwt_token}
   "users": [
     {
       "id": "user_123456789",
-      "email": "user1@example.com",
-      "creditBalance": 75,
+      "email": "user@example.com",
+      "creditBalance": 95,
       "registrationDate": "2025-09-30T10:00:00Z",
       "lastLogin": "2025-09-30T11:30:00Z",
-      "role": "user"
+      "role": "user",
+      "isActive": true
     },
     {
       "id": "user_987654321",
@@ -31,9 +37,13 @@ Authorization: Bearer {jwt_token}
       "creditBalance": 1000,
       "registrationDate": "2025-09-29T09:00:00Z",
       "lastLogin": "2025-09-30T12:00:00Z",
-      "role": "admin"
+      "role": "admin",
+      "isActive": true
     }
-  ]
+  ],
+  "total": 150,
+  "limit": 20,
+  "offset": 0
 }
 ```
 
@@ -42,7 +52,7 @@ Authorization: Bearer {jwt_token}
 - 403: Forbidden (user is not admin)
 
 ### GET /api/admin/analytics
-**Description**: Get platform usage analytics
+**Description**: Get platform usage analytics and statistics
 
 **Headers**:
 ```
@@ -60,12 +70,14 @@ Authorization: Bearer {jwt_token}
     "qwen-image-edit": {
       "usageCount": 800,
       "creditsConsumed": 1500,
-      "avgProcessingTime": 15.5  // seconds
+      "avgProcessingTime": 15.5,  // seconds
+      "costPerUse": 3.0          // credits
     },
     "gemini-flash-image": {
       "usageCount": 450,
       "creditsConsumed": 1000,
-      "avgProcessingTime": 18.2  // seconds
+      "avgProcessingTime": 18.2,  // seconds
+      "costPerUse": 2.5          // credits
     }
   },
   "revenue": {
@@ -86,6 +98,12 @@ Authorization: Bearer {jwt_token}
 ```
 Authorization: Bearer {jwt_token}
 ```
+
+**Query Parameters**:
+- limit: Number of transactions to return (default: 20, max: 100)
+- offset: Number of transactions to skip (default: 0)
+- startDate: Filter transactions from this date (optional)
+- endDate: Filter transactions to this date (optional)
 
 **Success Response (200 OK)**:
 ```
@@ -128,7 +146,8 @@ Content-Type: application/json
 {
   "title": "How to Create Stunning Landscapes",
   "content": "# Creating Beautiful Landscapes\n\nHere are some tips for creating beautiful landscape images...",
-  "status": "published"  // or "draft"
+  "status": "published",  // or "draft"
+  "imageUrl": "https://cdn.example.com/images/article-landscape.jpg"  // optional
 }
 ```
 
@@ -160,6 +179,11 @@ Content-Type: application/json
 Authorization: Bearer {jwt_token}
 ```
 
+**Query Parameters**:
+- limit: Number of articles to return (default: 20, max: 100)
+- offset: Number of articles to skip (default: 0)
+- status: Filter articles by status (optional)
+
 **Success Response (200 OK)**:
 ```
 {
@@ -172,7 +196,12 @@ Authorization: Bearer {jwt_token}
       "publicationDate": "2025-09-30T12:00:00Z",
       "status": "published"
     }
-  ]
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 15
+  }
 }
 ```
 

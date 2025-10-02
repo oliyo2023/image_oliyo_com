@@ -1,112 +1,143 @@
-// prisma/schema.prisma
-// Prisma schema for admin permissions and UI optimization
+// E:\project\oliyo.com\prisma\schema.prisma
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
-// Admin User model
-model AdminUser {
-  id                           String      @id @default(uuid())
-  email                       String      @unique
-  name                        String
-  passwordHash                String
-  isActive                    Boolean     @default(true)
-  roleIds                     String[]
-  createdAt                   DateTime    @default(now())
-  lastLogin                   DateTime?
-  personalizationSettings     Json?
-  lastAccessedResource        String?
-  lastAccessedResourceLockTime DateTime?
+model User {
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  passwordHash        String
+  creditBalance       Int      @default(100)
+  registrationDate    DateTime @default(now())
+  lastLogin           DateTime?
+  socialLoginProvider String?
+  isActive            Boolean  @default(true)
+  role                String   @default("user") // "user" or "admin"
+  concurrentRequests  Int      @default(0) // Max 3 as per spec
   
   // Relations
-  roles                       Role[]      @relation("AdminUserRoles")
-  auditLogs                   AuditLog[]  @relation("AdminUserAuditLogs")
-  resourceLocks               ResourceLock[] @relation("AdminUserResourceLocks")
-  userPersonalizations        UserPersonalization[] @relation("AdminUserPersonalizations")
-}
-
-// Role model
-model Role {
-  id          String    @id @default(uuid())
-  name        String    @unique
-  description String
-  permissionIds String[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  createdBy   String
-  isActive    Boolean   @default(true)
+  creditTransactions CreditTransaction[]
+  images            Image[]
+  articles          Article[]
+  sessions          Session[]
+  taskQueues        TaskQueue[]
+  purchaseIntents   PurchaseIntent[]
   
-  // Relations
-  adminUsers  AdminUser[] @relation("AdminUserRoles")
-  permissions Permission[] @relation("RolePermissions")
+  @@map("users")
 }
 
-// Permission model
-model Permission {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String
-  category    String
-  createdAt   DateTime @default(now())
-  isActive    Boolean  @default(true)
-  
-  // Relations
-  roles       Role[]   @relation("RolePermissions")
-}
-
-// Audit Log model
-model AuditLog {
-  id              String   @id @default(uuid())
+model CreditTransaction {
+  id              String   @id @default(cuid())
   userId          String
-  action          String
-  resourceType    String
-  resourceId      String
-  timestamp       DateTime @default(now())
-  ipAddress       String
-  userAgent       String?
-  sessionId       String
-  actionOutcome   String
-  beforeValue     Json?
-  afterValue      Json?
-  metadata        Json?
+  user            User     @relation(fields: [userId], references: [id])
+  transactionType String   // "earned", "spent", "purchased"
+  amount          Int      // Positive for earned/purchased, negative for spent
+  date            DateTime @default(now())
+  description     String
+  relatedModelName String?
   
-  // Relations
-  adminUser       AdminUser @relation("AdminUserAuditLogs", fields: [userId], references: [id])
+  @@index([userId])
+  @@map("credit_transactions")
 }
 
-// Resource Lock model
-model ResourceLock {
-  id                String   @id @default(uuid())
-  resourceType      String
-  resourceId        String
-  lockedBy          String
-  lockAcquiredAt    DateTime @default(now())
-  lockExpiresAt     DateTime
-  isActive          Boolean  @default(true)
-  
-  // Relations
-  adminUser         AdminUser @relation("AdminUserResourceLocks", fields: [lockedBy], references: [id])
-  
-  @@unique([resourceType, resourceId, isActive])
+model Image {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  originalFilename String
+  storagePath     String
+  creationDate    DateTime @default(now())
+  prompt          String?
+  fileFormat      String   // "jpeg", "png", etc.
+  fileSize        Int      // Size in bytes, max 50MB as per spec
+  originalImageId String?  // For edited images, reference to original
+  originalImage   Image?   @relation("ImageHierarchy", fields: [originalImageId], references: [id], onDelete: Cascade)
+  derivedImages   Image[]  @relation("ImageHierarchy")
+  modelName       String   // "qwen-image-edit", "gemini-flash-image", etc.
+  status          String   // "pending", "processing", "completed", "failed"
+  taskId          String?  // Reference to background task that generated this image
+  taskQueues      TaskQueue[]
+
+  @@index([userId])
+  @@map("images")
 }
 
-// User Personalization model
-model UserPersonalization {
-  id                  String   @id @default(uuid())
-  userId              String   @unique
-  dashboardLayout     Json?
-  themeSettings       Json?
-  widgetPreferences   Json?
-  navigationPreferences Json?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+model AIModel {
+  id            String   @id @default(cuid())
+  name          String   @unique // "qwen-image-edit", "gemini-flash-image", etc.
+  costPerUse    Float    // Cost in credits
+  isActive      Boolean  @default(true)
+  lastAccessTime DateTime?
+  usageCount    Int      @default(0)
   
-  // Relations
-  adminUser           AdminUser @relation("AdminUserPersonalizations", fields: [userId], references: [id])
+  @@map("ai_models")
+}
+
+model Article {
+  id             String   @id @default(cuid())
+  title          String
+  content        String
+  authorId       String
+  author         User     @relation(fields: [authorId], references: [id])
+  publicationDate DateTime @default(now())
+  status         String   // "draft", "published", "archived"
+  imageUrl       String?
+  
+  @@index([authorId])
+  @@map("articles")
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  sessionToken  String   @unique
+  expirationTime DateTime
+  createdAt     DateTime @default(now())
+  
+  @@index([userId])
+  @@index([sessionToken])
+  @@map("sessions")
+}
+
+model TaskQueue {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  taskId        String   // External ID for the task in the AI model service
+  type          String   // "generate", "edit"
+  status        String   // "pending", "processing", "completed", "failed", "queued"
+  progress      Int      // Progress percentage (0-100)
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+  imageId       String?  // Reference to the generated/edited image if successful
+  image         Image?   @relation(fields: [imageId], references: [id])
+  errorMessage  String?
+  
+  @@index([userId])
+  @@index([status])
+  @@map("task_queue")
+}
+
+model PurchaseIntent {
+  id            String   @id @default(cuid())
+  paymentIntentId String @unique
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  credits       Int      // Number of credits to purchase
+  amount        Int      // Amount in cents
+  status        String   // Stripe status
+  confirmed     Boolean  @default(false)
+  confirmedAt   DateTime?
+  createdAt     DateTime @default(now())
+  
+  @@index([userId])
+  @@index([confirmed])
+  @@map("purchase_intents")
 }

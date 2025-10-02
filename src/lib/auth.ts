@@ -1,332 +1,292 @@
-// src/lib/auth.ts
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import db from './db';
+import { hash, compare } from 'bcryptjs';
+import { SignJWT, jwtVerify } from 'jose';
+import { User, Prisma } from '@prisma/client';
+import prisma from './db';
 
-// Types for user authentication
-interface UserRegistrationData {
+// JWT Secret should be stored in environment variable
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'fallback_jwt_secret_for_development'
+);
+
+// Default registration bonus
+const REGISTRATION_BONUS = 100;
+
+export interface JWTPayload {
+  jti: string; // Token ID
+  iat: number; // Issued at
+  exp: number; // Expiration
+  userId: string;
   email: string;
-  password: string;
-  confirmPassword: string;
 }
 
-interface UserLoginData {
-  email: string;
-  password: string;
-}
+/**
+ * Authenticates a user and returns a JWT token
+ */
+export async function authenticateUser(email: string, password: string): Promise<{ user: User; token: string } | null> {
+  // Find user by email
+  const user = await prisma.user.findUnique({
+    where: { email: email.toLowerCase() },
+  });
 
-interface AuthResponse {
-  success: boolean;
-  message: string;
-  user?: any;
-  token?: string;
-}
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_development';
-
-export async function registerUser(userData: UserRegistrationData): Promise<AuthResponse> {
-  try {
-    const { email, password, confirmPassword } = userData;
-
-    // Validate input
-    if (!email || !password || !confirmPassword) {
-      return {
-        success: false,
-        message: 'Email, password, and confirmPassword are required'
-      };
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return {
-        success: false,
-        message: 'Invalid email format'
-      };
-    }
-
-    // Check if passwords match
-    if (password !== confirmPassword) {
-      return {
-        success: false,
-        message: 'Password and confirmPassword do not match'
-      };
-    }
-
-    // Validate password strength
-    if (password.length < 8) {
-      return {
-        success: false,
-        message: 'Password must be at least 8 characters long'
-      };
-    }
-
-    // Check if user already exists
-    const existingUser = await db.user.findUnique({
-      where: { email }
-    });
-
-    if (existingUser) {
-      return {
-        success: false,
-        message: 'User with this email already exists'
-      };
-    }
-
-    // Hash password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create user with 100 free credits
-    const newUser = await db.user.create({
-      data: {
-        email,
-        passwordHash: hashedPassword,
-        creditBalance: 100, // 100 free credits for new users
-        registrationDate: new Date()
-      }
-    });
-
-    // Create initial credit transaction for registration bonus
-    await db.creditTransaction.create({
-      data: {
-        userId: newUser.id,
-        transactionType: 'earned',
-        amount: 100,
-        description: 'Registration bonus'
-      }
-    });
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: newUser.id, email: newUser.email },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    return {
-      success: true,
-      message: 'User registered successfully',
-      user: {
-        id: newUser.id,
-        email: newUser.email,
-        creditBalance: newUser.creditBalance,
-        registrationDate: newUser.registrationDate
-      },
-      token
-    };
-  } catch (error) {
-    console.error('Error registering user:', error);
-    return {
-      success: false,
-      message: 'An error occurred during registration'
-    };
-  }
-}
-
-export async function loginUser(userData: UserLoginData): Promise<AuthResponse> {
-  try {
-    const { email, password } = userData;
-
-    // Validate input
-    if (!email || !password) {
-      return {
-        success: false,
-        message: 'Email and password are required'
-      };
-    }
-
-    // Find user by email
-    const user = await db.user.findUnique({
-      where: { email }
-    });
-
-    if (!user) {
-      return {
-        success: false,
-        message: 'Invalid credentials'
-      };
-    }
-
-    // Compare passwords
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      return {
-        success: false,
-        message: 'Invalid credentials'
-      };
-    }
-
-    // Update last login
-    await db.user.update({
-      where: { id: user.id },
-      data: { lastLogin: new Date() }
-    });
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    return {
-      success: true,
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        creditBalance: user.creditBalance
-      },
-      token
-    };
-  } catch (error) {
-    console.error('Error logging in user:', error);
-    return {
-      success: false,
-      message: 'An error occurred during login'
-    };
-  }
-}
-
-export async function socialLogin(provider: string, socialToken: string): Promise<AuthResponse> {
-  try {
-    // In a real implementation, this would verify the social token with the provider
-    // For now, we'll simulate the process
-    
-    // This is a simplified implementation - in real world you'd verify the token
-    // with the provider's API and get user info
-    const email = `social-${provider}-${Date.now()}@example.com`;
-    
-    // Check if user already exists with this social provider
-    let user = await db.user.findFirst({
-      where: {
-        email,
-        socialLoginProvider: provider
-      }
-    });
-
-    if (!user) {
-      // Create new user if doesn't exist
-      user = await db.user.create({
-        data: {
-          email,
-          passwordHash: '', // No password for social login
-          creditBalance: 100, // 100 free credits for new users
-          registrationDate: new Date(),
-          socialLoginProvider: provider
-        }
-      });
-
-      // Create initial credit transaction for registration bonus
-      await db.creditTransaction.create({
-        data: {
-          userId: user.id,
-          transactionType: 'earned',
-          amount: 100,
-          description: 'Registration bonus'
-        }
-      });
-    } else {
-      // Update last login for existing user
-      await db.user.update({
-        where: { id: user.id },
-        data: { lastLogin: new Date() }
-      });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    return {
-      success: true,
-      message: 'Social login successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        creditBalance: user.creditBalance,
-        socialLoginProvider: user.socialLoginProvider
-      },
-      token
-    };
-  } catch (error) {
-    console.error('Error with social login:', error);
-    return {
-      success: false,
-      message: 'An error occurred during social login'
-    };
-  }
-}
-
-export async function authenticateToken(token: string) {
-  if (!token) {
+  if (!user || !user.isActive) {
+    // Don't reveal if user exists or not for security
     return null;
   }
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; email: string };
-    const user = await db.user.findUnique({
-      where: { id: decoded.userId }
+  // Verify password
+  const isValid = await compare(password, user.passwordHash);
+  if (!isValid) {
+    return null;
+  }
+
+  // Update last login
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLogin: new Date() },
+  });
+
+  // Generate JWT token
+  const token = await generateToken(user);
+
+  return {
+    user: { ...user, passwordHash: '' }, // Don't return password hash
+    token,
+  };
+}
+
+/**
+ * Registers a new user with email/password
+ */
+export async function registerUser(email: string, password: string, confirmPassword: string): Promise<{ user: User; token: string } | null> {
+  // Validate inputs
+  if (password !== confirmPassword) {
+    throw new Error('Passwords do not match');
+  }
+
+  if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
+    throw new Error('Password must be at least 8 characters long with uppercase, lowercase, and number');
+  }
+
+  if (!isValidEmail(email)) {
+    throw new Error('Invalid email format');
+  }
+
+  // Check if user already exists
+  const existingUser = await prisma.user.findUnique({
+    where: { email: email.toLowerCase() },
+  });
+
+  if (existingUser) {
+    throw new Error('Email already exists');
+  }
+
+  // Hash password
+  const passwordHash = await hash(password, 12);
+
+  // Create user transactionally with initial credit transaction
+  const result = await prisma.$transaction(async (tx) => {
+    // Create the user
+    const user = await tx.user.create({
+      data: {
+        email: email.toLowerCase(),
+        passwordHash,
+        creditBalance: REGISTRATION_BONUS,
+      },
     });
 
-    if (!user) {
-      return null;
-    }
+    // Create the initial credit transaction
+    await tx.creditTransaction.create({
+      data: {
+        userId: user.id,
+        transactionType: 'earned',
+        amount: REGISTRATION_BONUS,
+        description: 'Registration bonus',
+      },
+    });
 
     return user;
-  } catch (error) {
-    console.error('Error authenticating token:', error);
+  });
+
+  // Generate JWT token
+  const token = await generateToken(result);
+
+  return {
+    user: { ...result, passwordHash: '' }, // Don't return password hash
+    token,
+  };
+}
+
+/**
+ * Handles social login or creates a new user for social login
+ */
+export async function socialLogin(provider: string, socialToken: string): Promise<{ user: User; token: string } | null> {
+  // In a real implementation, you would verify the social token with the provider
+  // For this example, we'll simulate getting user info from a social provider
+  const userInfo = await verifySocialToken(provider, socialToken);
+  
+  if (!userInfo) {
     return null;
   }
-}
 
-// Hash password using bcrypt
-export async function hashPassword(password: string): Promise<string> {
-  const saltRounds = 10;
-  return await bcrypt.hash(password, saltRounds);
-}
+  // Check if user exists with this email
+  let user = await prisma.user.findUnique({
+    where: { email: userInfo.email.toLowerCase() },
+  });
 
-// Verify password using bcrypt
-export async function verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
-  return await bcrypt.compare(plainPassword, hashedPassword);
-}
-
-export async function getUserProfile(userId: string) {
-  try {
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        creditBalance: true,
-        registrationDate: true,
-        lastLogin: true,
-        socialLoginProvider: true,
-        isActive: true,
-        role: true
-      }
+  if (user) {
+    // Update user with social provider info if not already set
+    if (!user.socialLoginProvider) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { 
+          socialLoginProvider: provider,
+          lastLogin: new Date() 
+        },
+      });
+    } else {
+      // Update last login
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLogin: new Date() },
+      });
+    }
+  } else {
+    // Create new user with social login
+    user = await prisma.user.create({
+      data: {
+        email: userInfo.email.toLowerCase(),
+        passwordHash: '', // No password for social login
+        creditBalance: REGISTRATION_BONUS,
+        socialLoginProvider: provider,
+      },
     });
 
-    if (!user) {
-      return null;
-    }
+    // Create the initial credit transaction
+    await prisma.creditTransaction.create({
+      data: {
+        userId: user.id,
+        transactionType: 'earned',
+        amount: REGISTRATION_BONUS,
+        description: 'Registration bonus',
+      },
+    });
+  }
 
-    return {
-      id: user.id,
-      email: user.email,
-      creditBalance: user.creditBalance,
-      registrationDate: user.registrationDate,
-      lastLogin: user.lastLogin,
-      socialLoginProvider: user.socialLoginProvider,
-      isActive: user.isActive,
-      role: user.role
-    };
+  // Generate JWT token
+  const token = await generateToken(user);
+
+  return {
+    user: { ...user, passwordHash: '' }, // Don't return password hash
+    token,
+  };
+}
+
+/**
+ * Verifies a JWT token and returns the payload
+ */
+export async function verifyToken(token: string): Promise<JWTPayload | null> {
+  try {
+    const verified = await jwtVerify(token, JWT_SECRET);
+    return verified.payload as JWTPayload;
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    console.error('Token verification failed:', error);
     return null;
   }
+}
+
+/**
+ * Authenticates a token and returns user information
+ */
+export async function authenticateToken(token: string): Promise<{ userId: string; email: string } | null> {
+  try {
+    const verified = await jwtVerify(token, JWT_SECRET);
+    const payload = verified.payload as JWTPayload;
+    
+    return {
+      userId: payload.userId,
+      email: payload.email
+    };
+  } catch (error) {
+    console.error('Token authentication failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Generates a new JWT token for a user
+ */
+export async function generateToken(user: User): Promise<string> {
+  const token = await new SignJWT({ 
+    userId: user.id, 
+    email: user.email 
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('7d') // Token expires in 7 days
+    .sign(JWT_SECRET);
+
+  return token;
+}
+
+/**
+ * Verifies if an email is valid
+ */
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
+ * Simulates verification of social token with provider
+ * In a real implementation, you would call the provider's API
+ */
+async function verifySocialToken(provider: string, socialToken: string): Promise<{ email: string; id: string } | null> {
+  // Simulate different providers
+  switch (provider.toLowerCase()) {
+    case 'google':
+      // In real implementation, verify Google token with Google API
+      // This is a placeholder for demonstration
+      if (socialToken.startsWith('google_')) {
+        return { email: `user${Date.now()}@gmail.com`, id: `google_${Date.now()}` };
+      }
+      break;
+    case 'facebook':
+      // In real implementation, verify Facebook token with Facebook API
+      if (socialToken.startsWith('facebook_')) {
+        return { email: `user${Date.now()}@facebook.com`, id: `facebook_${Date.now()}` };
+      }
+      break;
+    default:
+      return null;
+  }
+  return null;
+}
+
+/**
+ * Logout function - in a real implementation, you might add the token to a blacklist
+ */
+export async function logout(token: string): Promise<boolean> {
+  // In a real implementation, you would add this token to a blacklist
+  // until its expiration time
+  return true;
+}
+
+/**
+ * Gets user profile by ID
+ */
+export async function getUserProfile(userId: string): Promise<User | null> {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    // Don't return password hash
+    select: {
+      id: true,
+      email: true,
+      creditBalance: true,
+      registrationDate: true,
+      lastLogin: true,
+      socialLoginProvider: true,
+      isActive: true,
+      role: true,
+    }
+  });
 }

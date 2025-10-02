@@ -1,0 +1,86 @@
+# API Contract: User Authentication
+
+## POST /api/auth/register
+Register a new user account and grant initial credits
+
+### Request
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123",
+  "confirmPassword": "securePassword123"
+}
+```
+
+### Response (201 Created)
+```json
+{
+  "success": true,
+  "userId": "uuid-string",
+  "email": "user@example.com",
+  "creditBalance": 100,
+  "message": "Account created successfully with 100 free credits"
+}
+```
+
+### Response (400 Bad Request)
+```json
+{
+  "success": false,
+  "error": "Invalid input or email already exists"
+}
+```
+
+---
+
+## POST /api/auth/login
+Authenticate user and return session token
+
+### Request
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123"
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": true,
+  "sessionToken": "jwt-token-string",
+  "user": {
+    "id": "uuid-string",
+    "email": "user@example.com",
+    "creditBalance": 95
+  }
+}
+```
+
+### Response (401 Unauthorized)
+```json
+{
+  "success": false,
+  "error": "Invalid credentials"
+}
+```
+
+---
+
+## POST /api/auth/logout
+Logout user and invalidate session
+
+### Request
+```json
+{
+  "sessionToken": "jwt-token-string"
+}
+```
+
+### Response (200 OK)
+```json
+{
+  "success": true,
+  "message": "Successfully logged out"
+}
+```

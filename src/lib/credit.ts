@@ -1,486 +1,229 @@
-// src/lib/credit.ts
-import db from './db';
+import prisma from './db';
+import { CreditTransaction } from '@prisma/client';
 
-// Types for credit service
-interface CreditTransactionData {
-  userId: string;
-  transactionType: 'earned' | 'spent' | 'purchased';
-  amount: number;
-  description: string;
-  relatedModelName?: string;
-}
-
-interface CreditBalanceResult {
-  success: boolean;
-  message: string;
-  balance?: number;
-  lastUpdated?: Date;
-}
-
-interface CreditTransactionResult {
-  success: boolean;
-  message: string;
-  transactionId?: string;
-}
-
-interface CreditPurchaseData {
-  userId: string;
-  credits: number;
-  paymentIntentId: string;
-}
-
-// Get user's current credit balance
-export async function getUserCreditBalance(userId: string): Promise<CreditBalanceResult> {
-  try {
-    // Validate input
-    if (!userId) {
-      return {
-        success: false,
-        message: 'User ID is required'
-      };
-    }
-
-    // Fetch user from database
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: {
-        creditBalance: true,
-        lastLogin: true
-      }
-    });
-
-    // Check if user exists
-    if (!user) {
-      return {
-        success: false,
-        message: 'User not found'
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Credit balance retrieved successfully',
-      balance: user.creditBalance,
-      lastUpdated: user.lastLogin || new Date()
-    };
-  } catch (error) {
-    console.error('Error getting user credit balance:', error);
-    return {
-      success: false,
-      message: 'An error occurred while retrieving credit balance'
-    };
-  }
-}
-
-// Get user's credit transaction history
-export async function getUserCreditTransactions(userId: string, limit: number = 20, offset: number = 0): Promise<any> {
-  try {
-    // Validate input
-    if (!userId) {
-      return {
-        success: false,
-        message: 'User ID is required'
-      };
-    }
-
-    // Fetch credit transactions from database
-    const transactions = await db.creditTransaction.findMany({
-      where: { userId },
-      orderBy: { date: 'desc' },
-      take: limit,
-      skip: offset
-    });
-
-    // Get total count for pagination
-    const totalCount = await db.creditTransaction.count({
-      where: { userId }
-    });
-
-    return {
-      success: true,
-      message: 'Credit transactions retrieved successfully',
-      transactions,
-      pagination: {
-        total: totalCount,
-        limit,
-        offset,
-        hasNext: offset + transactions.length < totalCount
-      }
-    };
-  } catch (error) {
-    console.error('Error getting user credit transactions:', error);
-    return {
-      success: false,
-      message: 'An error occurred while retrieving credit transactions'
-    };
-  }
-}
-
-// Deduct credits from user account
-export async function deductCredits(userId: string, amount: number, description: string, modelName?: string): Promise<CreditTransactionResult> {
-  try {
-    // Validate input
-    if (!userId || !amount || !description) {
-      return {
-        success: false,
-        message: 'User ID, amount, and description are required'
-      };
-    }
-
-    // Validate that amount is negative for spending
-    if (amount > 0) {
-      return {
-        success: false,
-        message: 'Amount must be negative for credit deduction'
-      };
-    }
-
-    // Check user's current credit balance
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { creditBalance: true }
-    });
-
-    // Check if user exists
-    if (!user) {
-      return {
-        success: false,
-        message: 'User not found'
-      };
-    }
-
-    // Check if user has sufficient credits
-    if (user.creditBalance < Math.abs(amount)) {
-      return {
-        success: false,
-        message: 'Insufficient credits for this operation'
-      };
-    }
-
-    // Deduct credits from user account
-    await db.user.update({
-      where: { id: userId },
+/**
+ * Adjusts user credits by a given amount with a description
+ * @param userId The ID of the user
+ * @param amount The amount to adjust (negative to deduct, positive to add)
+ * @param description Description of the transaction
+ * @param relatedModelName Optional - the AI model related to this transaction
+ * @returns Updated user credit balance
+ */
+export async function adjustUserCredits(
+  userId: string,
+  amount: number,
+  description: string,
+  relatedModelName?: string
+): Promise<number> {
+  return prisma.$transaction(async (tx) => {
+    // Update user's credit balance
+    const updatedUser = await tx.user.update({
+      where: {
+        id: userId,
+      },
       data: {
         creditBalance: {
-          decrement: Math.abs(amount)
-        }
-      }
+          increment: amount,
+        },
+      },
     });
 
-    // Create credit transaction record
-    const transaction = await db.creditTransaction.create({
+    // Validate that the balance doesn't go negative (for deductions)
+    if (updatedUser.creditBalance < 0) {
+      throw new Error(`Credit balance would go negative: ${updatedUser.creditBalance}`);
+    }
+
+    // Create a credit transaction record
+    const transactionType = amount > 0 ? 'earned' : amount < 0 ? 'spent' : 'adjustment';
+    
+    await tx.creditTransaction.create({
       data: {
-        userId,
-        transactionType: 'spent',
-        amount,
-        description,
-        relatedModelName: modelName || null
-      }
+        userId: userId,
+        transactionType,
+        amount: amount,
+        description: description,
+        relatedModelName: relatedModelName || null,
+      },
     });
 
-    return {
-      success: true,
-      message: 'Credits deducted successfully',
-      transactionId: transaction.id
-    };
+    return updatedUser.creditBalance;
+  });
+}
+
+/**
+ * Gets the current credit balance for a user
+ * @param userId The ID of the user
+ * @returns Current credit balance
+ */
+export async function getUserCreditBalance(userId: string): Promise<number> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { creditBalance: true },
+  });
+
+  if (!user) {
+    throw new Error(`User with ID ${userId} not found`);
+  }
+
+  return user.creditBalance;
+}
+
+/**
+ * Checks if a user has sufficient credits for a specific action
+ * @param userId The ID of the user
+ * @param requiredAmount The amount of credits required
+ * @returns True if user has sufficient credits, false otherwise
+ */
+export async function hasSufficientCredits(userId: string, requiredAmount: number): Promise<boolean> {
+  const currentBalance = await getUserCreditBalance(userId);
+  return currentBalance >= requiredAmount;
+}
+
+/**
+ * Gets the cost of using a specific AI model
+ * @param modelName The name of the AI model
+ * @returns Cost in credits
+ */
+export async function getAIModelCost(modelName: string): Promise<number> {
+  // Get the model from the database to get its cost
+  const aiModel = await prisma.aIModel.findUnique({
+    where: { name: modelName },
+  });
+
+  if (!aiModel) {
+    throw new Error(`AI model ${modelName} not found`);
+  }
+
+  return aiModel.costPerUse;
+}
+
+/**
+ * Gets the credit transaction history for a user
+ * @param userId The ID of the user
+ * @param limit Number of transactions to return (default 20)
+ * @param offset Number of transactions to skip (default 0)
+ * @returns Array of credit transactions
+ */
+export async function getUserCreditHistory(
+  userId: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<CreditTransaction[]> {
+  return prisma.creditTransaction.findMany({
+    where: { userId },
+    orderBy: { date: 'desc' },
+    take: limit,
+    skip: offset,
+  });
+}
+
+/**
+ * Performs a credit check and deducts credits if sufficient
+ * @param userId The ID of the user
+ * @param amount Amount to deduct
+ * @param description Description of the transaction
+ * @param relatedModelName Optional - the AI model related to this transaction
+ * @returns Boolean indicating success or failure
+ */
+export async function deductCreditsIfSufficient(
+  userId: string,
+  amount: number,
+  description: string,
+  relatedModelName?: string
+): Promise<boolean> {
+  if (amount <= 0) {
+    throw new Error('Deduction amount must be positive');
+  }
+
+  const hasCredits = await hasSufficientCredits(userId, amount);
+  if (!hasCredits) {
+    return false; // Insufficient credits
+  }
+
+  try {
+    await adjustUserCredits(userId, -amount, description, relatedModelName);
+    return true;
   } catch (error) {
     console.error('Error deducting credits:', error);
-    return {
-      success: false,
-      message: 'An error occurred while deducting credits'
-    };
+    return false;
   }
 }
 
-// Add credits to user account
-export async function addCredits(userId: string, amount: number, description: string, source?: string): Promise<CreditTransactionResult> {
-  try {
-    // Validate input
-    if (!userId || !amount || !description) {
-      return {
-        success: false,
-        message: 'User ID, amount, and description are required'
-      };
-    }
-
-    // Validate that amount is positive for earning/purchasing
-    if (amount <= 0) {
-      return {
-        success: false,
-        message: 'Amount must be positive for credit addition'
-      };
-    }
-
-    // Check if user exists
-    const user = await db.user.findUnique({
-      where: { id: userId }
-    });
-
-    // Check if user exists
-    if (!user) {
-      return {
-        success: false,
-        message: 'User not found'
-      };
-    }
-
-    // Add credits to user account
-    await db.user.update({
-      where: { id: userId },
-      data: {
-        creditBalance: {
-          increment: amount
-        }
-      }
-    });
-
-    // Create credit transaction record
-    const transaction = await db.creditTransaction.create({
-      data: {
-        userId,
-        transactionType: source || 'earned',
-        amount,
-        description
-      }
-    });
-
-    return {
-      success: true,
-      message: 'Credits added successfully',
-      transactionId: transaction.id
-    };
-  } catch (error) {
-    console.error('Error adding credits:', error);
-    return {
-      success: false,
-      message: 'An error occurred while adding credits'
-    };
+/**
+ * Refunds credits to a user
+ * @param userId The ID of the user
+ * @param amount Amount to refund
+ * @param description Description of the refund
+ * @param relatedModelName Optional - the AI model related to this transaction
+ * @returns New credit balance
+ */
+export async function refundCredits(
+  userId: string,
+  amount: number,
+  description: string,
+  relatedModelName?: string
+): Promise<number> {
+  if (amount <= 0) {
+    throw new Error('Refund amount must be positive');
   }
+
+  return await adjustUserCredits(userId, amount, description, relatedModelName);
 }
 
-// Create credit purchase intent
-export async function createCreditPurchaseIntent(purchaseData: CreditPurchaseData): Promise<any> {
-  try {
-    const { userId, credits, paymentIntentId } = purchaseData;
+/**
+ * Gets total credits spent by a user
+ * @param userId The ID of the user
+ * @returns Total amount of credits spent
+ */
+export async function getTotalCreditsSpent(userId: string): Promise<number> {
+  const result = await prisma.creditTransaction.aggregate({
+    where: {
+      userId,
+      transactionType: 'spent',
+    },
+    _sum: {
+      amount: true,
+    },
+  });
 
-    // Validate input
-    if (!userId || !credits || !paymentIntentId) {
-      return {
-        success: false,
-        message: 'User ID, credits, and paymentIntentId are required'
-      };
-    }
-
-    // Validate credit amount (must be one of the allowed packages: 100, 500, 1000)
-    const validPackages = [100, 500, 1000];
-    if (!validPackages.includes(credits)) {
-      return {
-        success: false,
-        message: `Invalid credit package. Must be one of: ${validPackages.join(', ')}`
-      };
-    }
-
-    // Check if user exists
-    const user = await db.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      return {
-        success: false,
-        message: 'User not found'
-      };
-    }
-
-    // In a real implementation, this would:
-    // 1. Verify the payment intent with Stripe
-    // 2. Check if the payment intent is valid and successful
-    // 3. Get the amount paid from the payment intent
-    // 4. Calculate the number of credits based on the amount paid
-
-    // For now, we'll simulate the process
-    const amountPaid = credits * 0.1; // $0.10 per credit (example pricing)
-
-    // Add credits to user account
-    const addResult = await addCredits(
-      userId, 
-      credits, 
-      `Credit purchase of ${credits} credits`, 
-      'purchased'
-    );
-
-    if (!addResult.success) {
-      return {
-        success: false,
-        message: addResult.message
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Credit purchase confirmed and credits added',
-      transactionId: addResult.transactionId,
-      creditsAdded: credits,
-      amountPaid: amountPaid,
-      newBalance: user.creditBalance + credits
-    };
-  } catch (error) {
-    console.error('Error creating credit purchase intent:', error);
-    return {
-      success: false,
-      message: 'An error occurred during credit purchase'
-    };
-  }
+  // Since spent transactions are negative, we need to negate the sum
+  return Math.abs(result._sum.amount || 0);
 }
 
-// Confirm credit purchase
-export async function confirmCreditPurchase(purchaseData: CreditPurchaseData): Promise<any> {
-  try {
-    const { userId, credits, paymentIntentId } = purchaseData;
+/**
+ * Gets total credits earned by a user
+ * @param userId The ID of the user
+ * @returns Total amount of credits earned
+ */
+export async function getTotalCreditsEarned(userId: string): Promise<number> {
+  const result = await prisma.creditTransaction.aggregate({
+    where: {
+      userId,
+      transactionType: 'earned',
+    },
+    _sum: {
+      amount: true,
+    },
+  });
 
-    // Validate input
-    if (!userId || !credits || !paymentIntentId) {
-      return {
-        success: false,
-        message: 'User ID, credits, and paymentIntentId are required'
-      };
-    }
-
-    // Validate credit amount (must be one of the allowed packages: 100, 500, 1000)
-    const validPackages = [100, 500, 1000];
-    if (!validPackages.includes(credits)) {
-      return {
-        success: false,
-        message: `Invalid credit package. Must be one of: ${validPackages.join(', ')}`
-      };
-    }
-
-    // Check if user exists
-    const user = await db.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      return {
-        success: false,
-        message: 'User not found'
-      };
-    }
-
-    // In a real implementation, this would:
-    // 1. Verify the payment intent with Stripe
-    // 2. Check if the payment intent is valid and successful
-    // 3. Get the amount paid from the payment intent
-    // 4. Calculate the number of credits based on the amount paid
-
-    // For now, we'll simulate the process
-    const amountPaid = credits * 0.1; // $0.10 per credit (example pricing)
-
-    // Add credits to user account
-    const addResult = await addCredits(
-      userId, 
-      credits, 
-      `Credit purchase of ${credits} credits`, 
-      'purchased'
-    );
-
-    if (!addResult.success) {
-      return {
-        success: false,
-        message: addResult.message
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Credit purchase confirmed and credits added',
-      transactionId: addResult.transactionId,
-      creditsAdded: credits,
-      amountPaid: amountPaid,
-      newBalance: user.creditBalance + credits
-    };
-  } catch (error) {
-    console.error('Error confirming credit purchase:', error);
-    return {
-      success: false,
-      message: 'An error occurred during credit purchase confirmation'
-    };
-  }
+  return result._sum.amount || 0;
 }
 
-// Get all credit transactions (for admin)
-export async function getAllCreditTransactions(limit: number = 50, offset: number = 0) {
-  try {
-    // Fetch all credit transactions with user information
-    const transactions = await db.creditTransaction.findMany({
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true
-          }
-        }
-      },
-      orderBy: { date: 'desc' },
-      take: limit,
-      skip: offset
-    });
+/**
+ * Gets total credits purchased by a user
+ * @param userId The ID of the user
+ * @returns Total amount of credits purchased
+ */
+export async function getTotalCreditsPurchased(userId: string): Promise<number> {
+  const result = await prisma.creditTransaction.aggregate({
+    where: {
+      userId,
+      transactionType: 'purchased',
+    },
+    _sum: {
+      amount: true,
+    },
+  });
 
-    // Get total count for pagination
-    const totalCount = await db.creditTransaction.count();
-
-    return {
-      success: true,
-      transactions: transactions.map(transaction => ({
-        id: transaction.id,
-        userId: transaction.userId,
-        user: transaction.user,
-        transactionType: transaction.transactionType,
-        amount: transaction.amount,
-        date: transaction.date,
-        description: transaction.description,
-        relatedModelName: transaction.relatedModelName
-      })),
-      pagination: {
-        total: totalCount,
-        limit,
-        offset,
-        hasNext: offset + transactions.length < totalCount
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching all credit transactions:', error);
-    return {
-      success: false,
-      message: 'An error occurred while fetching credit transactions'
-    };
-  }
-}
-
-// Get public user stats (for admin dashboard)
-export async function getPublicUserStats() {
-  try {
-    const totalUsers = await db.user.count();
-    const activeUsersToday = await db.user.count({
-      where: {
-        lastLogin: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)) // Today's date at 00:00:00
-        }
-      }
-    });
-
-    return {
-      success: true,
-      stats: {
-        totalUsers,
-        activeUsersToday
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching public user stats:', error);
-    return {
-      success: false,
-      message: 'An error occurred while fetching user stats'
-    };
-  }
+  return result._sum.amount || 0;
 }

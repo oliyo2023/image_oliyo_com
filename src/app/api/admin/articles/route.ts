@@ -1,186 +1,110 @@
-// src/app/api/admin/articles/route.ts
+// POST /api/admin/articles endpoint implementation
 import { NextRequest } from 'next/server';
-import { authenticateToken } from '@/lib/auth';
-import { createArticle, getAllArticles } from '@/lib/user';
+import { verifyToken } from '@/lib/auth';
+import { getUserById } from '@/lib/user';
+import prisma from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
     // Extract token from Authorization header
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Authorization token required' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-    
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    const user = await authenticateToken(token);
-    
-    if (!user) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Invalid or expired token' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+      return Response.json(
+        { error: 'Unauthorized', message: 'Missing or invalid authorization header' },
+        { status: 401 }
       );
     }
 
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    
+    // Verify token
+    const tokenPayload = await verifyToken(token);
+    if (!tokenPayload) {
+      return Response.json(
+        { error: 'Unauthorized', message: 'Invalid or expired token' },
+        { status: 401 }
+      );
+    }
+
+    const userId = tokenPayload.userId;
+    
     // Check if user has admin role
-    if (user.role !== 'admin') {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Access denied: Admin role required' 
-        }),
-        { 
-          status: 403,
-          headers: { 'Content-Type': 'application/json' }
-        }
+    const user = await getUserById(userId);
+    if (!user || user.role !== 'admin') {
+      return Response.json(
+        { error: 'Forbidden', message: 'Admin access required' },
+        { status: 403 }
       );
     }
 
     const body = await request.json();
     const { title, content, status, imageUrl } = body;
 
-    // Validate required fields
-    if (!title || !content) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Title and content are required' 
-        }),
+    // Validate request body
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return Response.json(
         { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          error: 'Invalid input', 
+          message: 'Title is required and must be a non-empty string' 
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      return Response.json(
+        { 
+          error: 'Invalid input', 
+          message: 'Content is required and must be a non-empty string' 
+        },
+        { status: 400 }
       );
     }
 
     // Validate status if provided
-    const validStatuses = ['draft', 'published', 'archived'];
-    if (status && !validStatuses.includes(status)) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Invalid status. Must be one of: draft, published, archived' 
-        }),
+    if (status && !['draft', 'published', 'archived'].includes(status)) {
+      return Response.json(
         { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          error: 'Invalid input', 
+          message: 'Status must be one of: draft, published, archived' 
+        },
+        { status: 400 }
       );
     }
+
+    // Use provided status or default to 'draft'
+    const finalStatus = status || 'draft';
 
     // Create the article
-    const result = await createArticle(title, content, user.id, status || 'draft', imageUrl || undefined);
+    const article = await prisma.article.create({
+      data: {
+        title: title.trim(),
+        content: content.trim(),
+        authorId: userId,
+        status: finalStatus,
+        imageUrl: imageUrl || null,
+      },
+    });
 
-    return new Response(
-      JSON.stringify(result),
+    return Response.json({
+      success: true,
+      message: 'Article created successfully',
+      article: {
+        id: article.id,
+        title: article.title,
+        authorId: article.authorId,
+        publicationDate: article.publicationDate,
+        status: article.status,
+      },
+    });
+  } catch (error: any) {
+    console.error('Create admin article error:', error);
+    return Response.json(
       { 
-        status: result.success ? 201 : 400,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  } catch (error) {
-    console.error('Error in admin create article endpoint:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'An internal server error occurred' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    // Extract token from Authorization header
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Authorization token required' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-    
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    const user = await authenticateToken(token);
-    
-    if (!user) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Invalid or expired token' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Check if user has admin role
-    if (user.role !== 'admin') {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Access denied: Admin role required' 
-        }),
-        { 
-          status: 403,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Get query parameters for pagination and filtering
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
-    const statusFilter = searchParams.get('status') || undefined;
-
-    // Get all articles
-    const result = await getAllArticles();
-
-    return new Response(
-      JSON.stringify(result),
-      { 
-        status: result.success ? 200 : 400,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  } catch (error) {
-    console.error('Error in admin get articles endpoint:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'An internal server error occurred' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        error: 'Internal server error',
+        message: 'An unexpected error occurred while creating the article'
+      },
+      { status: 500 }
     );
   }
 }

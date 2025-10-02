@@ -1,7 +1,7 @@
 // src/lib/resource-locking.ts
 // Resource locking service for concurrent access control
 
-import db from './db';
+import db from './db-server'; // Use server-side database client
 
 /**
  * Attempt to acquire a lock on a resource

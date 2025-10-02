@@ -13,7 +13,7 @@ import { validateUUID } from '@/lib/validations';
 export async function POST(request: NextRequest) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         await logAuditAction(
           user.id,
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -228,7 +228,7 @@ export async function GET(request: NextRequest) {
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         await logAuditAction(
           user.id,

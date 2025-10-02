@@ -13,7 +13,7 @@ import { validateUUID } from '@/lib/validations';
 export async function GET(request: NextRequest, { params }: { params: { resourceType: string, resourceId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest, { params }: { params: { resource
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { resourceType, resourceId } = params;
         await logAuditAction(
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest, { params }: { params: { resource
 export async function POST(request: NextRequest, { params }: { params: { resourceType: string, resourceId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest, { params }: { params: { resourc
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { resourceType, resourceId } = params;
         await logAuditAction(
@@ -281,7 +281,7 @@ export async function POST(request: NextRequest, { params }: { params: { resourc
 export async function DELETE(request: NextRequest, { params }: { params: { resourceType: string, resourceId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -364,7 +364,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { resou
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { resourceType, resourceId } = params;
         await logAuditAction(
@@ -402,7 +402,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { resou
 export async function PUT(request: NextRequest, { params }: { params: { resourceType: string, resourceId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -560,7 +560,7 @@ export async function PUT(request: NextRequest, { params }: { params: { resource
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { resourceType, resourceId } = params;
         await logAuditAction(
@@ -598,7 +598,7 @@ export async function PUT(request: NextRequest, { params }: { params: { resource
 export async function PATCH(request: NextRequest, { params }: { params: { resourceType: string, resourceId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -709,7 +709,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { resour
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { resourceType, resourceId } = params;
         await logAuditAction(

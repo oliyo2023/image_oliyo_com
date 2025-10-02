@@ -1,88 +1,92 @@
 # Quickstart Guide: AI Image Generation and Editing Website
 
 ## Overview
-This guide provides step-by-step instructions to verify the core functionality of the AI Image Generation and Editing Website. Follow these steps to ensure the system is working as specified.
+This guide will help you set up and use the AI Image Generation and Editing Website with credit-based system.
 
 ## Prerequisites
-- A registered account with sufficient credits (or 100 free credits from registration)
-- An image file to upload (if testing image editing feature)
-- A text prompt for image generation/editing
+- Node.js 18+ and npm/pnpm
+- Access to qwen-image-edit and gemini-flash-image APIs
+- Database (PostgreSQL recommended)
+- Image storage solution
 
-## Step-by-Step Verification
+## Setup Instructions
 
-### 1. User Registration and Login
-1. Navigate to the website homepage
-2. Click on "Register" or "Sign Up"
-3. Enter a valid email address and secure password
-4. Complete any email verification steps
-5. Verify that you receive 100 free credits upon registration
-6. Log out and then log back in to verify authentication works
+### 1. Clone and Install Dependencies
+```bash
+git clone <repository-url>
+cd oliyo.com
+pnpm install  # or npm install
+```
 
-**Expected Result**: Account is created successfully, 100 credits are added, and login works with email/password.
+### 2. Configure Environment Variables
+Create a `.env` file with:
+```
+DATABASE_URL=your_database_connection_string
+QWEN_API_KEY=your_qwen_api_key
+GEMINI_API_KEY=your_gemini_api_key
+NEXTAUTH_SECRET=your_nextauth_secret
+CLOUDINARY_URL=your_cloudinary_url  # or other image storage
+```
 
-### 2. Basic Image Generation
-1. Log into your account
-2. Navigate to the "Generate Image" section
-3. Enter a text prompt (e.g., "A beautiful landscape with mountains")
-4. Select an AI model (qwen-image-edit or gemini-flash-image)
-5. Click "Generate"
-6. Wait for the image to be created
-7. Verify that credits were deducted appropriately based on the selected model
+### 3. Run Database Migrations
+```bash
+npx prisma db push  # or your preferred migration command
+```
 
-**Expected Result**: An image is generated based on the text prompt, credits are deducted at the model-appropriate rate, and the image is displayed in your gallery.
+### 4. Start Development Server
+```bash
+pnpm dev  # or npm run dev
+```
 
-### 3. Image Editing with Text Prompt
-1. Log into your account
-2. Navigate to the "Edit Image" section
-3. Upload an image file (ensure it's less than 50MB and in a supported format)
-4. Enter a text prompt to modify the image (e.g., "Make the sky more blue and add clouds")
-5. Select an AI model
-6. Click "Edit"
-7. Wait for the image to be processed
-8. Verify that credits were deducted appropriately
+The application should now be running at `http://localhost:3000`
 
-**Expected Result**: The uploaded image is modified according to the text prompt, credits are deducted, and the edited image is displayed in your gallery.
+## User Workflow Test
 
-### 4. Credit Purchase
-1. Navigate to the "Purchase Credits" section
-2. Select a credit package (e.g., 100, 500, or 1000 credits)
-3. Complete the payment process
-4. Verify that the credits have been added to your account
+### 1. Register New User
+1. Navigate to `/auth/register`
+2. Enter valid email and password
+3. Verify account is created with 100 free credits
+4. Check that user is logged in automatically
 
-**Expected Result**: Payment is processed successfully and the correct number of credits are added to your account.
+### 2. Generate New Image
+1. Go to `/dashboard` or `/editor`
+2. Enter a text prompt (e.g., "A futuristic city skyline")
+3. Select an AI model (qwen-image-edit costs 5 credits, gemini-flash-image costs 10)
+4. Click "Generate"
+5. Verify:
+   - Image is generated successfully
+   - 5 or 10 credits are deducted from balance
+   - New image appears in user's gallery
 
-### 5. Admin Functionality
-1. Log into an admin account
-2. Navigate to the admin dashboard
-3. View the list of registered users
-4. Check the credit consumption statistics
-5. View AI model usage statistics
-6. Create a new article or example
-7. Verify the article appears publicly on the website
+### 3. Upload and Edit Existing Image
+1. Go to `/gallery` and click "Upload Image"
+2. Upload an image file (under 50MB)
+3. Select the uploaded image for editing
+4. Enter a text prompt to edit the image (e.g., "Add a sunset to the sky")
+5. Select an AI model and click "Edit"
+6. Verify:
+   - Image is edited as requested
+   - Appropriate credits are deducted
+   - Edited image is saved to user's gallery
 
-**Expected Result**: All admin functions work as expected, showing user data, usage statistics, and allowing content creation.
+### 4. Purchase Additional Credits
+1. Go to `/dashboard`
+2. When credits are low (or at 0), click "Purchase Credits"
+3. Complete the purchase flow
+4. Verify:
+   - Credits are added to user's balance
+   - Transaction is recorded in credit history
 
-### 6. Social Login (if applicable)
-1. Return to the homepage
-2. Click "Sign in with Google" or another social option
-3. Complete the social authentication flow
-4. Verify that a new account is created or existing account is accessed
+### 5. Admin Functions
+1. Log in as admin user at `/admin`
+2. Verify:
+   - User management interface is accessible
+   - Credit consumption statistics are available
+   - Article creation/publishing interface is available
 
-**Expected Result**: Social login works as expected, creating an account if new or logging into an existing account.
-
-## Success Criteria
-- All user actions result in appropriate credit deductions
-- AI model selection affects the number of credits consumed as clarified
-- Image generation and editing complete successfully within reasonable time
-- User can access their generated and edited images in the gallery
-- Admin dashboard accurately reflects user and usage data
-- Payment processing completes without errors
-
-## Troubleshooting
-- If image generation fails, verify that your account has sufficient credits
-- If credits aren't deducted, check that the correct model was selected (with appropriate pricing)
-- If uploads fail, ensure the image is less than 50MB and in a supported format
-- If payment fails, verify payment method details
-
----
-*Quickstart guide created as part of implementation planning for AI Image Generation and Editing Website*
+## Expected Results
+- All user registration, authentication, and authorization flows work correctly
+- Image generation and editing operations complete successfully
+- Credit deductions are accurately calculated and applied
+- All operations are logged and auditable
+- System maintains 95% uptime and API response times under 2 seconds

@@ -1,7 +1,7 @@
 // src/lib/audit-logging.ts
 // Comprehensive audit logging service
 
-import db from './db';
+import db from './db-server'; // Use server-side database client
 import { v4 as uuidv4 } from 'uuid';
 
 /**

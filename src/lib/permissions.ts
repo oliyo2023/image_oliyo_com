@@ -1,7 +1,7 @@
 // src/lib/permissions.ts
 // Permissions service with role-based access control
 
-import db from './db';
+import db from './db-server'; // Use server-side database client
 
 /**
  * Check if a user has a specific permission

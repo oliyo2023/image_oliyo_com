@@ -1,7 +1,7 @@
 // src/lib/personalization.ts
 // UI personalization service
 
-import db from './db';
+import db from './db-server'; // Use server-side database client
 
 /**
  * Get user personalization settings

@@ -1,62 +1,46 @@
-// src/app/api/credits/balance/route.ts
 import { NextRequest } from 'next/server';
-import { authenticateToken } from '@/lib/auth';
+import { verifyToken, getUserProfile } from '@/lib/auth';
 import { getUserCreditBalance } from '@/lib/credit';
 
 export async function GET(request: NextRequest) {
   try {
     // Extract token from Authorization header
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Authorization token required' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+      return Response.json(
+        { error: 'Unauthorized', message: 'Missing or invalid authorization header' },
+        { status: 401 }
       );
     }
-    
+
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    const user = await authenticateToken(token);
     
-    if (!user) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Invalid or expired token' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+    // Verify token
+    const tokenPayload = await verifyToken(token);
+    if (!tokenPayload) {
+      return Response.json(
+        { error: 'Unauthorized', message: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 
+    const userId = tokenPayload.userId;
+    
     // Get user's credit balance
-    const result = await getUserCreditBalance(user.id);
+    const balance = await getUserCreditBalance(userId);
 
-    return new Response(
-      JSON.stringify(result),
+    return Response.json({
+      balance: balance,
+      lastUpdated: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Get credit balance error:', error);
+    return Response.json(
       { 
-        status: result.success ? 200 : 400,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  } catch (error) {
-    console.error('Error in credits balance endpoint:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'An internal server error occurred' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        error: 'Internal server error',
+        message: 'An unexpected error occurred while retrieving credit balance'
+      },
+      { status: 500 }
     );
   }
 }

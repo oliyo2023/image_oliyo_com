@@ -13,7 +13,7 @@ import { validateUUID } from '@/lib/validations';
 export async function POST(request: NextRequest) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         await logAuditAction(
           user.id,
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -270,14 +270,14 @@ export async function GET(request: NextRequest) {
     const pagination = validatePaginationParams(params.limit, params.offset);
     
     // Validate date range if provided
-    let dateRangeValidation = { isValid: true };
+    let dateRangeValidation: { isValid: boolean; startDate?: Date; endDate?: Date; error?: string } = { isValid: true };
     if (params.startDate || params.endDate) {
-      dateRangeValidation = validateDateRange(params.startDate, params.endDate);
-      if (!dateRangeValidation.isValid) {
+      const validationResult = validateDateRange(params.startDate, params.endDate);
+      if (!validationResult.isValid) {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            message: `Bad Request: ${dateRangeValidation.error}` 
+            message: `Bad Request: ${validationResult.error || 'Invalid date range'}` 
           }),
           { 
             status: 400,
@@ -285,6 +285,7 @@ export async function GET(request: NextRequest) {
           }
         );
       }
+      dateRangeValidation = validationResult;
     }
 
     // Validate UUIDs if provided
@@ -364,7 +365,7 @@ export async function GET(request: NextRequest) {
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         await logAuditAction(
           user.id,
@@ -405,7 +406,7 @@ export async function GET(request: NextRequest) {
 //   /*
 //   try {
 //     // Authenticate admin user
-//     const user = await authenticateAdmin(request, {} as any);
+//     const user = await authenticateAdmin(request);
 //     if (!user) {
 //       return new Response(
 //         JSON.stringify({ 
@@ -523,7 +524,7 @@ export async function GET(request: NextRequest) {
     
 //     // Log audit action for error
 //     try {
-//       const user = await authenticateAdmin(request, {} as any);
+//       const user = await authenticateAdmin(request);
 //       if (user) {
 //         await logAuditAction(
 //           user.id,
@@ -561,7 +562,7 @@ export async function GET(request: NextRequest) {
 // export async function GET_SUMMARY(request: NextRequest) {
 //   try {
 //     // Authenticate admin user
-//     const user = await authenticateAdmin(request, {} as any);
+//     const user = await authenticateAdmin(request);
 //     if (!user) {
 //       return new Response(
 //         JSON.stringify({ 
@@ -648,7 +649,7 @@ export async function GET(request: NextRequest) {
 //     
 //     // Log audit action for error
 //     try {
-//       const user = await authenticateAdmin(request, {} as any);
+//       const user = await authenticateAdmin(request);
 //       if (user) {
 //         await logAuditAction(
 //           user.id,
@@ -685,7 +686,7 @@ export async function GET(request: NextRequest) {
 // export async function GET_EXPORT(request: NextRequest) {
 //   try {
 //     // Authenticate admin user
-//     const user = await authenticateAdmin(request, {} as any);
+//     const user = await authenticateAdmin(request);
 //     if (!user) {
 //       return new Response(
 //         JSON.stringify({ 
@@ -836,7 +837,7 @@ export async function GET(request: NextRequest) {
 //     
 //     // Log audit action for error
 //     try {
-//       const user = await authenticateAdmin(request, {} as any);
+//       const user = await authenticateAdmin(request);
 //       if (user) {
 //         await logAuditAction(
 //           user.id,
@@ -870,270 +871,3 @@ export async function GET(request: NextRequest) {
  * GET /api/admin/audit-logs/[logId]
  * Get a specific audit log entry by ID
  */
-export async function GET_BY_ID(request: NextRequest, { params }: { params: { logId: string } }) {
-  try {
-    // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
-    if (!user) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Unauthorized: Invalid or missing authentication token' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Validate log ID
-    const { logId } = params;
-    if (!logId || !validateUUID(logId)) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Bad Request: Invalid or missing log ID' 
-        }),
-        { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Check permission
-    const hasPermission = await checkPermission(user, 'admin.audit.view-entry');
-    if (!hasPermission) {
-      // Log audit action
-      await logAuditAction(
-        user.id,
-        'VIEW_AUDIT_LOG_ENTRY',
-        'audit-log',
-        logId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
-      );
-
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Forbidden: Insufficient permissions to view audit log entry' 
-        }),
-        { 
-          status: 403,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Get audit log entry
-    const result = await getAuditLogById(logId);
-
-    if (!result) {
-      // Log audit action for not found
-      await logAuditAction(
-        user.id,
-        'VIEW_AUDIT_LOG_ENTRY',
-        'audit-log',
-        logId,
-        request,
-        'failed',
-        null,
-        { message: 'Audit log entry not found' }
-      );
-
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Not Found: Audit log entry not found' 
-        }),
-        { 
-          status: 404,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Log audit action
-    await logAuditAction(
-      user.id,
-      'VIEW_AUDIT_LOG_ENTRY',
-      'audit-log',
-      logId,
-      request,
-      'success',
-      null,
-      { logId }
-    );
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        auditLog: result
-      }),
-      { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  } catch (error) {
-    console.error('Error in GET /api/admin/audit-logs/[logId]:', error);
-    
-    // Log audit action for error
-    try {
-      const user = await authenticateAdmin(request, {} as any);
-      if (user) {
-        const { logId } = params;
-        await logAuditAction(
-          user.id,
-          'VIEW_AUDIT_LOG_ENTRY',
-          'audit-log',
-          logId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        );
-      }
-    } catch (logError) {
-      console.error('Error logging audit action:', logError);
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'Internal Server Error: Failed to retrieve audit log entry' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  }
-}
-
-/**
- * DELETE /api/admin/audit-logs
- * Purge old audit logs (admin only)
- */
-export async function PURGE(request: NextRequest) {
-  try {
-    // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
-    if (!user) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Unauthorized: Invalid or missing authentication token' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Check permission
-    const hasPermission = await checkPermission(user, 'admin.audit.purge');
-    if (!hasPermission) {
-      // Log audit action
-      await logAuditAction(
-        user.id,
-        'PURGE_OLD_AUDIT_LOGS',
-        'audit-log',
-        'purge',
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
-      );
-
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Forbidden: Insufficient permissions to purge audit logs' 
-        }),
-        { 
-          status: 403,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Get query parameters
-    const { searchParams } = new URL(request.url);
-    const daysToKeep = parseInt(searchParams.get('days') || '90', 10);
-
-    // Validate daysToKeep parameter
-    if (isNaN(daysToKeep) || daysToKeep < 1 || daysToKeep > 365) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Bad Request: Days parameter must be between 1 and 365' 
-        }),
-        { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Purge old audit logs
-    const result = await purgeOldAuditLogs(daysToKeep);
-
-    // Log audit action
-    await logAuditAction(
-      user.id,
-      'PURGE_OLD_AUDIT_LOGS',
-      'audit-log',
-      'purge',
-      request,
-      result.success ? 'success' : 'failed',
-      null,
-      { deletedCount: result.deletedCount, daysToKeep }
-    );
-
-    return new Response(
-      JSON.stringify(result),
-      { 
-        status: result.success ? 200 : 400,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  } catch (error) {
-    console.error('Error in DELETE /api/admin/audit-logs:', error);
-    
-    // Log audit action for error
-    try {
-      const user = await authenticateAdmin(request, {} as any);
-      if (user) {
-        await logAuditAction(
-          user.id,
-          'PURGE_OLD_AUDIT_LOGS',
-          'audit-log',
-          'purge',
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        );
-      }
-    } catch (logError) {
-      console.error('Error logging audit action:', logError);
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'Internal Server Error: Failed to purge old audit logs' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  }
-}

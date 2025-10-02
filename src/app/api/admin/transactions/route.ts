@@ -1,83 +1,164 @@
-// src/app/api/admin/transactions/route.ts
 import { NextRequest } from 'next/server';
-import { authenticateToken } from '@/lib/auth';
-import { getAllCreditTransactions } from '@/lib/credit';
+import { verifyToken } from '@/lib/auth';
+import { getUserById } from '@/lib/user';
+import prisma from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
     // Extract token from Authorization header
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Authorization token required' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+      return Response.json(
+        { error: 'Unauthorized', message: 'Missing or invalid authorization header' },
+        { status: 401 }
       );
     }
-    
+
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    const user = await authenticateToken(token);
     
-    if (!user) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Invalid or expired token' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+    // Verify token
+    const tokenPayload = await verifyToken(token);
+    if (!tokenPayload) {
+      return Response.json(
+        { error: 'Unauthorized', message: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 
+    const userId = tokenPayload.userId;
+    
     // Check if user has admin role
-    if (user.role !== 'admin') {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Access denied: Admin role required' 
-        }),
-        { 
-          status: 403,
-          headers: { 'Content-Type': 'application/json' }
-        }
+    const user = await getUserById(userId);
+    if (!user || user.role !== 'admin') {
+      return Response.json(
+        { error: 'Forbidden', message: 'Admin access required' },
+        { status: 403 }
       );
     }
 
-    // Get query parameters for pagination and filtering
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
-    const userIdFilter = searchParams.get('userId') || undefined;
-    const transactionTypeFilter = searchParams.get('type') || undefined;
+    // Parse query parameters for pagination and filtering
+    const url = new URL(request.url);
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const offset = parseInt(url.searchParams.get('offset') || '0');
+    const startDate = url.searchParams.get('startDate') || undefined;
+    const endDate = url.searchParams.get('endDate') || undefined;
+    
+    // Validate limit and offset
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return Response.json(
+        { 
+          error: 'Invalid input', 
+          message: 'Limit must be a number between 1 and 100' 
+        },
+        { status: 400 }
+      );
+    }
+    
+    if (isNaN(offset) || offset < 0) {
+      return Response.json(
+        { 
+          error: 'Invalid input', 
+          message: 'Offset must be a non-negative number' 
+        },
+        { status: 400 }
+      );
+    }
 
-    // Get all credit transactions for audit purposes
-    const result = await getAllCreditTransactions(limit, offset, userIdFilter, transactionTypeFilter);
-
-    return new Response(
-      JSON.stringify(result),
-      { 
-        status: result.success ? 200 : 400,
-        headers: { 'Content-Type': 'application/json' }
+    // Validate dates if provided
+    let startDateObj: Date | undefined;
+    let endDateObj: Date | undefined;
+    
+    if (startDate) {
+      startDateObj = new Date(startDate);
+      if (isNaN(startDateObj.getTime())) {
+        return Response.json(
+          { 
+            error: 'Invalid input', 
+            message: 'startDate must be a valid date' 
+          },
+          { status: 400 }
+        );
       }
+    }
+    
+    if (endDate) {
+      endDateObj = new Date(endDate);
+      if (isNaN(endDateObj.getTime())) {
+        return Response.json(
+          { 
+            error: 'Invalid input', 
+            message: 'endDate must be a valid date' 
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Build the where clause for filtering
+    const whereClause: any = {};
+    
+    if (startDateObj || endDateObj) {
+      whereClause.date = {};
+      if (startDateObj) {
+        whereClause.date.gte = startDateObj;
+      }
+      if (endDateObj) {
+        whereClause.date.lte = endDateObj;
+      }
+    }
+
+    // Get admin transactions with pagination
+    const transactions = await prisma.creditTransaction.findMany({
+      where: whereClause,
+      orderBy: {
+        date: 'desc',
+      },
+      take: limit,
+      skip: offset,
+    });
+
+    // Get total count for pagination
+    const total = await prisma.creditTransaction.count({
+      where: whereClause,
+    });
+
+    // Get user information for each transaction to include email
+    const transactionWithUserEmails = await Promise.all(
+      transactions.map(async (transaction) => {
+        const user = await prisma.user.findUnique({
+          where: { id: transaction.userId },
+          select: { email: true },
+        });
+
+        return {
+          id: transaction.id,
+          userId: transaction.userId,
+          userEmail: user?.email || 'unknown',
+          transactionType: transaction.transactionType,
+          amount: transaction.amount,
+          date: transaction.date,
+          description: transaction.description,
+          relatedModelName: transaction.relatedModelName,
+        };
+      })
     );
-  } catch (error) {
-    console.error('Error in admin transactions endpoint:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'An internal server error occurred' 
-      }),
+
+    return Response.json({
+      transactions: transactionWithUserEmails,
+      pagination: {
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        total,
+      },
+    });
+  } catch (error: any) {
+    console.error('Get admin transactions error:', error);
+    return Response.json(
       { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        error: 'Internal server error',
+        message: 'An unexpected error occurred while retrieving transactions'
+      },
+      { status: 500 }
     );
   }
 }

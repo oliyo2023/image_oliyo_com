@@ -1,7 +1,7 @@
 // src/lib/admin-users.ts
 // Admin user management service
 
-import db from './db';
+import db from './db-server'; // Use server-side database client
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 

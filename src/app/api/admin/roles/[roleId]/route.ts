@@ -13,7 +13,7 @@ import { validateUUID } from '@/lib/validations';
 export async function PUT(request: NextRequest, { params }: { params: { roleId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -128,7 +128,7 @@ export async function PUT(request: NextRequest, { params }: { params: { roleId: 
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { roleId } = await request.json().catch(() => ({ roleId: 'unknown' }));
         await logAuditAction(
@@ -166,7 +166,7 @@ export async function PUT(request: NextRequest, { params }: { params: { roleId: 
 export async function GET(request: NextRequest, { params }: { params: { roleId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -277,7 +277,7 @@ export async function GET(request: NextRequest, { params }: { params: { roleId: 
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { roleId } = params;
         await logAuditAction(
@@ -315,7 +315,7 @@ export async function GET(request: NextRequest, { params }: { params: { roleId: 
 export async function DELETE(request: NextRequest, { params }: { params: { roleId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -429,7 +429,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { roleI
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { roleId } = params;
         await logAuditAction(

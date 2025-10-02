@@ -1,81 +1,95 @@
-// src/app/api/admin/users/route.ts
 import { NextRequest } from 'next/server';
-import { authenticateToken } from '@/lib/auth';
-import { getAllUsers } from '@/lib/user';
+import { verifyToken } from '@/lib/auth';
+import { getAllUsers, getUserById } from '@/lib/user';
 
 export async function GET(request: NextRequest) {
   try {
     // Extract token from Authorization header
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Authorization token required' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+      return Response.json(
+        { error: 'Unauthorized', message: 'Missing or invalid authorization header' },
+        { status: 401 }
       );
     }
-    
+
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    const user = await authenticateToken(token);
     
-    if (!user) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Invalid or expired token' 
-        }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+    // Verify token
+    const tokenPayload = await verifyToken(token);
+    if (!tokenPayload) {
+      return Response.json(
+        { error: 'Unauthorized', message: 'Invalid or expired token' },
+        { status: 401 }
       );
     }
 
+    const userId = tokenPayload.userId;
+    
     // Check if user has admin role
-    if (user.role !== 'admin') {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Access denied: Admin role required' 
-        }),
-        { 
-          status: 403,
-          headers: { 'Content-Type': 'application/json' }
-        }
+    const user = await getUserById(userId);
+    if (!user || user.role !== 'admin') {
+      return Response.json(
+        { error: 'Forbidden', message: 'Admin access required' },
+        { status: 403 }
       );
     }
 
-    // Get query parameters for pagination
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    // Parse query parameters for pagination and search
+    const url = new URL(request.url);
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const offset = parseInt(url.searchParams.get('offset') || '0');
+    const search = url.searchParams.get('search') || undefined;
+    
+    // Validate limit and offset
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return Response.json(
+        { 
+          error: 'Invalid input', 
+          message: 'Limit must be a number between 1 and 100' 
+        },
+        { status: 400 }
+      );
+    }
+    
+    if (isNaN(offset) || offset < 0) {
+      return Response.json(
+        { 
+          error: 'Invalid input', 
+          message: 'Offset must be a non-negative number' 
+        },
+        { status: 400 }
+      );
+    }
 
     // Get all users
-    const result = await getAllUsers(limit, offset);
+    const result = await getAllUsers(limit, offset, search);
 
-    return new Response(
-      JSON.stringify(result),
+    // Format the response
+    const formattedUsers = result.users.map(user => ({
+      id: user.id,
+      email: user.email,
+      creditBalance: user.creditBalance,
+      registrationDate: user.registrationDate,
+      lastLogin: user.lastLogin,
+      role: user.role,
+      isActive: user.isActive,
+    }));
+
+    return Response.json({
+      users: formattedUsers,
+      total: result.total,
+      limit: result.limit,
+      offset: result.offset,
+    });
+  } catch (error: any) {
+    console.error('Get admin users error:', error);
+    return Response.json(
       { 
-        status: result.success ? 200 : 400,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  } catch (error) {
-    console.error('Error in admin users endpoint:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: 'An internal server error occurred' 
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        error: 'Internal server error',
+        message: 'An unexpected error occurred while retrieving users'
+      },
+      { status: 500 }
     );
   }
 }

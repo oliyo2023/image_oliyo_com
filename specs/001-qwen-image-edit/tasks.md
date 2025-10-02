@@ -1,6 +1,6 @@
 # Tasks: AI Image Generation and Editing Website
 
-**Input**: Design documents from `/specs/001-qwen-image-edit/`
+**Input**: Design documents from `E:\project\oliyo.com\specs\001-qwen-image-edit\`
 **Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
 
 ## Execution Flow (main)
@@ -43,106 +43,112 @@
 - Paths shown below assume single project - adjust based on plan.md structure
 
 ## Phase 3.1: Setup
-- [X] T001 Create project structure per implementation plan with Next.js App Router structure
-- [X] T002 Initialize Next.js project with TypeScript, Prisma ORM, Stripe dependencies
-- [X] T003 [P] Configure linting (ESLint) and formatting (Prettier) tools
+- [x] T001 Create Next.js project structure per implementation plan
+- [x] T002 Initialize TypeScript/Next.js project with required dependencies (Next.js 14+, React 18+, Prisma, etc.)
+- [x] T003 [P] Configure linting (ESLint) and formatting (Prettier) tools
+- [x] T004 Set up Prisma ORM with PostgreSQL and create initial schema
+- [x] T005 Create .env file structure for all required environment variables
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
-- [X] T004 [P] Contract test for auth endpoints in tests/contract/test_auth.ts
-- [X] T005 [P] Contract test for image endpoints in tests/contract/test_image.ts
-- [X] T006 [P] Contract test for payment endpoints in tests/contract/test_payment.ts
-- [X] T007 [P] Contract test for admin endpoints in tests/contract/test_admin.ts
-- [X] T008 [P] Integration test user registration and credit assignment in tests/integration/test_auth.ts
-- [X] T009 [P] Integration test image generation flow in tests/integration/test_image_gen.ts
-- [X] T010 [P] Integration test image editing flow in tests/integration/test_image_edit.ts
-- [X] T011 [P] Integration test payment processing in tests/integration/test_payment.ts
+- [x] T006 [P] Contract test POST /api/auth/register in tests/contract/test_auth_register.ts
+- [x] T007 [P] Contract test POST /api/auth/login in tests/contract/test_auth_login.ts
+- [x] T008 [P] Contract test POST /api/auth/logout in tests/contract/test_auth_logout.ts
+- [x] T009 [P] Contract test POST /api/images/generate in tests/contract/test_images_generate.ts
+- [x] T010 [P] Contract test POST /api/images/edit in tests/contract/test_images_edit.ts
+- [x] T011 [P] Contract test POST /api/images/upload in tests/contract/test_images_upload.ts
+- [x] T012 [P] Integration test user registration workflow in tests/integration/test_user_registration.ts
+- [x] T013 [P] Integration test image generation workflow in tests/integration/test_image_generation.ts
+- [x] T014 [P] Integration test image editing workflow in tests/integration/test_image_editing.ts
 
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
-- [X] T012 [P] User model with Prisma schema in src/lib/db.ts
-- [X] T013 [P] CreditTransaction model with Prisma schema in src/lib/db.ts
-- [X] T014 [P] Image model with Prisma schema in src/lib/db.ts
-- [X] T015 [P] AIModel model with Prisma schema in src/lib/db.ts
-- [X] T016 [P] Article model with Prisma schema in src/lib/db.ts
-- [X] T017 [P] Session model with Prisma schema in src/lib/db.ts
-- [X] T018 [P] Auth service with login, register, social auth in src/lib/auth.ts
-- [X] T019 [P] Image generation service with AI model integration in src/lib/ai-models.ts
-- [X] T020 [P] Payment service with Stripe integration in src/lib/stripe.ts
-- [X] T021 [P] User service with user operations in src/lib/user.ts
-- [X] T022 [P] AI model integration service for qwen-image-edit and gemini-flash-image in src/lib/ai-models.ts
-- [X] T023 [P] Credit service with credit deduction logic in src/lib/credit.ts
-- [X] T024 POST /api/auth/register endpoint in src/app/api/auth/register/route.ts
-- [X] T025 POST /api/auth/login endpoint in src/app/api/auth/login/route.ts
-- [X] T026 POST /api/auth/login-social endpoint in src/app/api/auth/login-social/route.ts
-- [X] T027 GET /api/auth/profile endpoint in src/app/api/auth/profile/route.ts
-- [X] T028 POST /api/auth/logout endpoint in src/app/api/auth/logout/route.ts
-- [X] T029 POST /api/images/generate endpoint in src/app/api/images/generate/route.ts
-- [X] T030 POST /api/images/edit endpoint in src/app/api/images/edit/route.ts
-- [X] T031 GET /api/images/[...slug] endpoint in src/app/api/images/[...slug]/route.ts
-- [X] T032 GET /api/credits/balance endpoint in src/app/api/credits/balance/route.ts
-- [X] T033 GET /api/credits/transactions endpoint in src/app/api/credits/transactions/route.ts
-- [X] T034 POST /api/credits/purchase-intent endpoint in src/app/api/credits/purchase-intent/route.ts
-- [X] T035 POST /api/credits/purchase-confirm endpoint in src/app/api/credits/purchase-confirm/route.ts
-- [X] T036 GET /api/admin/users endpoint in src/app/api/admin/users/route.ts
-- [X] T037 GET /api/admin/analytics endpoint in src/app/api/admin/analytics/route.ts
-- [X] T038 GET /api/admin/transactions endpoint in src/app/api/admin/transactions/route.ts
-- [X] T039 POST /api/admin/articles endpoint in src/app/api/admin/articles/route.ts
-- [X] T040 GET /api/admin/articles endpoint in src/app/api/admin/articles/route.ts
-- [X] T041 PUT /api/admin/articles/[id] endpoint in src/app/api/admin/articles/[id]/route.ts
+- [x] T015 [P] User model in prisma/schema.prisma
+- [x] T016 [P] CreditTransaction model in prisma/schema.prisma
+- [x] T017 [P] Image model in prisma/schema.prisma
+- [x] T018 [P] AIModel model in prisma/schema.prisma
+- [x] T019 [P] Article model in prisma/schema.prisma
+- [x] T020 [P] Session model in prisma/schema.prisma
+- [x] T021 [P] UserService with CRUD operations in lib/services/user-service.ts
+- [x] T022 [P] CreditService with transaction operations in lib/services/credit-service.ts
+- [x] T023 [P] ImageService for image management in lib/services/image-service.ts
+- [x] T024 [P] AuthService for authentication in lib/services/auth-service.ts
+- [x] T025 [P] AIService for AI model integration in lib/services/ai-service.ts
+- [x] T026 [P] ArticleService for content management in lib/services/article-service.ts
+- [x] T027 [P] Password hashing utility in lib/utils/auth.ts
+- [x] T028 [P] Session management utility in lib/utils/session.ts
+- [x] T029 [P] Image validation utility in lib/utils/image.ts
+- [x] T030 [P] Credit calculation utility in lib/utils/credit.ts
+- [x] T031 [P] Type definitions in lib/types/index.ts
+- [x] T032 POST /api/auth/register endpoint implementation
+- [x] T033 POST /api/auth/login endpoint implementation
+- [x] T034 POST /api/auth/logout endpoint implementation
+- [x] T035 POST /api/images/generate endpoint implementation
+- [x] T036 POST /api/images/edit endpoint implementation
+- [x] T037 POST /api/images/upload endpoint implementation
+- [x] T038 [P] Image upload component in components/image-editor/upload.tsx
+- [x] T039 [P] Image editor component in components/image-editor/editor.tsx
+- [x] T040 [P] User dashboard component in components/dashboard/index.tsx
+- [x] T041 [P] Gallery component in components/gallery/index.tsx
+- [x] T042 [P] Authentication components in components/auth/
+- [x] T043 [P] Admin components in components/admin/
 
 ## Phase 3.4: Integration
-- [X] T042 Connect models to database with Prisma in src/lib/db.ts
-- [X] T043 Implement authentication middleware with JWT in src/middleware.ts
-- [X] T044 Implement rate limiting middleware with Redis in src/middleware.ts
-- [X] Setup Cloudflare R2 client for secure image storage in src/lib/r2.ts
-- [X] T046 Setup Stripe client for payment processing in src/lib/stripe.ts
-- [X] T047 Implement image upload validation (format, size) in src/lib/validations.ts
-- [X] T048 Connect image generation to AI models in src/lib/ai-models.ts
-- [X] T049 Implement credit deduction logic for image operations in src/lib/credit.ts
-- [X] T050 Add security measures for image storage in src/lib/r2.ts
+- [x] T044 Connect all service layers to Prisma database
+- [x] T045 Implement auth middleware for protected routes
+- [x] T046 Set up request/response logging
+- [x] T047 Configure CORS and security headers
+- [x] T048 Implement image storage solutions (local/cloudinary)
+- [x] T049 Integrate with Qwen and Gemini APIs
+- [x] T050 Set up payment processing for credit purchases
+- [x] T051 Implement session management
+- [x] T052 Create database seed script with initial AI models
 
 ## Phase 3.5: Polish
-- [X] T051 [P] Unit tests for authentication service in tests/unit/test_auth_service.py
-- [X] T052 [P] Unit tests for image generation service in tests/unit/test_image_service.py
-- [X] T053 [P] Unit tests for payment service in tests/unit/test_payment_service.py
-- [X] T054 [P] Unit tests for user management in tests/unit/test_user_service.py
-- [X] T055 Performance tests for image generation API with 90/90/90 Core Web Vitals targets
-- [X] T056 [P] Update docs/api.md with all endpoints and usage
-- [X] T057 Remove code duplication and refactor common utilities
-- [X] T058 Run manual-testing.md following quickstart guide scenarios
-
-## Progress Tracking
-*This checklist is updated during execution flow*
-
-**Phase Status**:
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
-- [x] Phase 2: Task planning complete (/plan command - describe approach only)
-- [x] Phase 3: Tasks generated (/tasks command)
-- [x] Phase 4: Implementation complete
-- [x] Phase 5: Validation passed
-
-**Gate Status**:
-- [x] Initial Constitution Check: PASS
-- [x] Post-Design Constitution Check: PASS
-- [x] All NEEDS CLARIFICATION resolved
-- [x] Complexity deviations documented
+- [x] T053 [P] Unit tests for UserService in tests/unit/test_user_service.ts
+- [x] T054 [P] Unit tests for CreditService in tests/unit/test_credit_service.ts
+- [x] T055 [P] Unit tests for ImageService in tests/unit/test_image_service.ts
+- [x] T056 [P] Unit tests for AuthService in tests/unit/test_auth_service.ts
+- [x] T057 [P] Unit tests for AIService in tests/unit/test_ai_service.ts
+- [x] T058 Performance tests for API response times (<2s)
+- [x] T059 [P] Update docs/api.md with API documentation
+- [x] T060 [P] Update docs/user-guide.md
+- [x] T061 [P] Update docs/admin-guide.md
+- [x] T062 Run all tests with 80%+ coverage requirement
+- [x] T063 Run manual-testing.md to validate user workflows
 
 ## Dependencies
-- Tests (T004-T011) before implementation (T012-T050)
-- T012-T017 (models) before T018-T022 (services)
-- T018-T022 (services) before T023-T042 (controllers/endpoints)
-- T042 (database connection) blocks several integration tasks
-- T043 (auth middleware) blocks protected endpoints
-- Implementation before polish (T051-T058)
+- Tests (T006-T014) before implementation (T015-T043)
+- T015-T020 blocks T021-T026 (models before services)
+- T021-T026 blocks T032-T037 (services before endpoints)
+- T001-T005 blocks all other tasks (setup first)
+- T044 blocks T032-T037 (DB connection before endpoints)
+- Implementation before polish (T053-T063)
 
 ## Parallel Example
 ```
-# Launch T004-T007 together:
-Task: "Contract test for auth endpoints in tests/contract/test_auth.py"
-Task: "Contract test for image endpoints in tests/contract/test_image.py"
-Task: "Contract test for payment endpoints in tests/contract/test_payment.py"
-Task: "Contract test for admin endpoints in tests/contract/test_admin.py"
+# Launch T006-T011 together (contract tests):
+Task: "Contract test POST /api/auth/register in tests/contract/test_auth_register.ts"
+Task: "Contract test POST /api/auth/login in tests/contract/test_auth_login.ts"
+Task: "Contract test POST /api/auth/logout in tests/contract/test_auth_logout.ts"
+Task: "Contract test POST /api/images/generate in tests/contract/test_images_generate.ts"
+Task: "Contract test POST /api/images/edit in tests/contract/test_images_edit.ts"
+Task: "Contract test POST /api/images/upload in tests/contract/test_images_upload.ts"
+
+# Launch T015-T020 together (models):
+Task: "User model in prisma/schema.prisma"
+Task: "CreditTransaction model in prisma/schema.prisma"
+Task: "Image model in prisma/schema.prisma"
+Task: "AIModel model in prisma/schema.prisma"
+Task: "Article model in prisma/schema.prisma"
+Task: "Session model in prisma/schema.prisma"
+
+# Launch T021-T026 together (services):
+Task: "UserService with CRUD operations in lib/services/user-service.ts"
+Task: "CreditService with transaction operations in lib/services/credit-service.ts"
+Task: "ImageService for image management in lib/services/image-service.ts"
+Task: "AuthService for authentication in lib/services/auth-service.ts"
+Task: "AIService for AI model integration in lib/services/ai-service.ts"
+Task: "ArticleService for content management in lib/services/article-service.ts"
 ```
 
 ## Notes
@@ -173,9 +179,9 @@ Task: "Contract test for admin endpoints in tests/contract/test_admin.py"
 ## Validation Checklist
 *GATE: Checked by main() before returning*
 
-- [X] All contracts have corresponding tests
-- [X] All entities have model tasks
-- [X] All tests come before implementation
-- [X] Parallel tasks truly independent
-- [X] Each task specifies exact file path
-- [X] No task modifies same file as another [P] task
+- [x] All contracts have corresponding tests
+- [x] All entities have model tasks
+- [x] All tests come before implementation
+- [x] Parallel tasks truly independent
+- [x] Each task specifies exact file path
+- [x] No task modifies same file as another [P] task

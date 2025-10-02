@@ -1,29 +1,18 @@
-// src/lib/db.ts
-// Database connection using Prisma ORM
-
 import { PrismaClient } from '@prisma/client';
 
-// Global declaration for PrismaClient to prevent multiple instances in development
-declare global {
-  var prisma: PrismaClient | undefined;
+// Extend PrismaClient to add any custom methods
+class ExtendedPrismaClient extends PrismaClient {
+  constructor() {
+    super();
+  }
+
+  // Add custom methods here if needed
 }
 
-// Create PrismaClient instance
-const prismaClient = global.prisma || new PrismaClient();
+// Create a single instance of PrismaClient
+const prisma = new ExtendedPrismaClient();
 
-// In development, store PrismaClient in global variable to prevent multiple instances
-if (process.env.NODE_ENV !== 'production') {
-  global.prisma = prismaClient;
-}
+export default prisma;
 
-export default prismaClient;
-
-// Export models for easy access
-export const {
-  adminUser,
-  role,
-  permission,
-  auditLog,
-  resourceLock,
-  userPersonalization
-} = prismaClient;
+// Export types for convenience
+export * from '@prisma/client';

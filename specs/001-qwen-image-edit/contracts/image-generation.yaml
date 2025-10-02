@@ -1,0 +1,96 @@
+# API Contract: Image Generation Service
+
+## Overview
+This contract defines the API for generating images using AI models with a credit-based system.
+
+## Endpoints
+
+### POST /api/images/generate
+Generate an image from a text prompt using an AI model.
+
+#### Request
+```json
+{
+  "prompt": "A beautiful landscape with mountains and lakes",
+  "model": "qwen-image-edit",
+  "width": 1024,
+  "height": 1024
+}
+```
+
+#### Request Validation
+- `prompt`: Required string, 1-1000 characters
+- `model`: Required string, must be "qwen-image-edit" or "gemini-flash-image"
+- `width`: Optional integer, 256-1024 (default: 512)
+- `height`: Optional integer, 256-1024 (default: 512)
+
+#### Response (Success - 200 OK)
+```json
+{
+  "taskId": "task_123456789",
+  "message": "Image generation task submitted successfully",
+  "estimatedTime": "30-60 seconds",
+  "creditsDeducted": 10,
+  "modelUsed": "qwen-image-edit",
+  "userId": "user_987654321"
+}
+```
+
+#### Response (Insufficient Credits - 400 Bad Request)
+```json
+{
+  "error": "Insufficient credits",
+  "requiredCredits": 10,
+  "availableCredits": 5
+}
+```
+
+#### Response (Validation Error - 400 Bad Request)
+```json
+{
+  "error": "Validation failed",
+  "details": [
+    {
+      "field": "prompt",
+      "message": "Prompt must be between 1 and 1000 characters"
+    }
+  ]
+}
+```
+
+### GET /api/images/task/{taskId}
+Check the status of an image generation task.
+
+#### Response (Success - 200 OK)
+```json
+{
+  "taskId": "task_123456789",
+  "status": "completed",
+  "progress": 100,
+  "imageUrl": "/api/images/download/task_123456789",
+  "createdAt": "2025-10-02T10:00:00Z",
+  "completedAt": "2025-10-02T10:00:45Z"
+}
+```
+
+### POST /api/auth/register
+Register a new user account with initial credits.
+
+#### Request
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePassword123",
+  "confirmPassword": "SecurePassword123"
+}
+```
+
+#### Response (Success - 200 OK)
+```json
+{
+  "userId": "user_123456789",
+  "email": "user@example.com",
+  "credits": 100,
+  "message": "Registration successful, 100 credits granted"
+}
+```

@@ -14,7 +14,7 @@ import { validateUUID } from '@/lib/validations';
 export async function GET(request: NextRequest, { params }: { params: { userId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { userId } = params;
         await logAuditAction(
@@ -166,7 +166,7 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
 export async function POST(request: NextRequest, { params }: { params: { userId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -314,7 +314,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { userId } = params;
         await logAuditAction(
@@ -352,7 +352,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
 export async function DELETE(request: NextRequest, { params }: { params: { userId: string, permissionId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -466,7 +466,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { userId, permissionId } = params;
         await logAuditAction(
