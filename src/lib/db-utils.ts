@@ -62,7 +62,7 @@ export async function findImagesByUserId(userId: string, limit: number = 20, off
  * Generic function to create an image record
  * Reduces code duplication across services that need to create image records
  */
-export async function createImage(data: Partial<Image>): Promise<Image> {
+export async function createImage(data: Omit<Image, 'id' | 'creationDate'>): Promise<Image> {
   return prisma.image.create({
     data,
   });
@@ -108,7 +108,7 @@ export async function findTaskQueuesByUserId(userId: string, limit: number = 20,
  * Generic function to create a task queue entry
  * Reduces code duplication across services that need to create task queue entries
  */
-export async function createTaskQueueEntry(data: Partial<TaskQueue>): Promise<TaskQueue> {
+export async function createTaskQueueEntry(data: Omit<TaskQueue, 'id' | 'createdAt'>): Promise<TaskQueue> {
   return prisma.taskQueue.create({
     data,
   });
@@ -154,7 +154,7 @@ export async function findCreditTransactionsByUserId(userId: string, limit: numb
  * Generic function to create a credit transaction
  * Reduces code duplication across services that need to create credit transactions
  */
-export async function createCreditTransaction(data: Partial<CreditTransaction>): Promise<CreditTransaction> {
+export async function createCreditTransaction(data: Omit<CreditTransaction, 'id' | 'date'>): Promise<CreditTransaction> {
   return prisma.creditTransaction.create({
     data,
   });

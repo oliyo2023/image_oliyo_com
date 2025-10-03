@@ -15,7 +15,7 @@ export interface LoginInput {
 export interface LoginResult {
   success: boolean;
   sessionToken?: string;
-  user?: User;
+  user?: Omit<User, 'passwordHash'>;
   error?: string;
 }
 
@@ -58,13 +58,12 @@ export class AuthService {
       }
     });
     
+    const { passwordHash, ...userWithoutPassword } = user;
+
     return {
       success: true,
       sessionToken,
-      user: {
-        ...user,
-        passwordHash: undefined // Don't return password hash
-      }
+      user: userWithoutPassword
     };
   }
 

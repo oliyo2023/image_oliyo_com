@@ -28,17 +28,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.audit.create');
+    const hasPermission = await checkPermission(user.userId, 'admin.audit.create');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'CREATE_AUDIT_LOG',
-        'audit-log',
-        'new',
-        request,
-        'failed',
-        null,
         { message: 'Insufficient permissions' }
       );
 
@@ -143,13 +138,8 @@ export async function POST(request: NextRequest) {
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'CREATE_AUDIT_LOG_ENTRY',
-      'audit-log',
-      result.auditLog?.id || 'new',
-      request,
-      result.success ? 'success' : 'failed',
-      null,
       result
     );
 
@@ -168,13 +158,8 @@ export async function POST(request: NextRequest) {
       const user = await authenticateAdmin(request);
       if (user) {
         await logAuditAction(
-          user.id,
+          user.userId,
           'CREATE_AUDIT_LOG_ENTRY',
-          'audit-log',
-          'new',
-          request,
-          'error',
-          null,
           { error: error instanceof Error ? error.message : 'Unknown error' }
         );
       }
@@ -217,17 +202,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.audit.view');
+    const hasPermission = await checkPermission(user.userId, 'admin.audit.view');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'VIEW_AUDIT_LOGS',
-        'audit-log',
-        'all',
-        request,
-        'failed',
-        null,
         { message: 'Insufficient permissions' }
       );
 
@@ -263,21 +243,41 @@ export async function GET(request: NextRequest) {
       sortOrder: searchParams.get('sortOrder')
     };
     
+    // Filter out null values before sanitizing
+    const filteredParams: Record<string, string> = {};
+    Object.entries(rawParams).forEach(([key, value]) => {
+      if (value !== null) {
+        filteredParams[key] = value;
+      }
+    });
+    
     // Sanitize parameters
-    const params = validateAndSanitizeURLParams(rawParams);
+    const params = validateAndSanitizeURLParams(filteredParams);
 
     // Validate pagination parameters
     const pagination = validatePaginationParams(params.limit, params.offset);
+    if (!pagination) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Bad Request: Invalid pagination parameters' 
+        }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
     
     // Validate date range if provided
     let dateRangeValidation: { isValid: boolean; startDate?: Date; endDate?: Date; error?: string } = { isValid: true };
     if (params.startDate || params.endDate) {
       const validationResult = validateDateRange(params.startDate, params.endDate);
-      if (!validationResult.isValid) {
+      if (!validationResult) {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            message: `Bad Request: ${validationResult.error || 'Invalid date range'}` 
+            message: 'Bad Request: Invalid date range' 
           }),
           { 
             status: 400,
@@ -285,7 +285,7 @@ export async function GET(request: NextRequest) {
           }
         );
       }
-      dateRangeValidation = validationResult;
+      dateRangeValidation = { isValid: true, startDate: validationResult.startDate, endDate: validationResult.endDate };
     }
 
     // Validate UUIDs if provided
@@ -339,13 +339,8 @@ export async function GET(request: NextRequest) {
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'VIEW_AUDIT_LOGS',
-      'audit-log',
-      'filtered',
-      request,
-      'success',
-      null,
       { 
         filterCount: result.auditLogs?.length || 0,
         pagination,
@@ -368,13 +363,8 @@ export async function GET(request: NextRequest) {
       const user = await authenticateAdmin(request);
       if (user) {
         await logAuditAction(
-          user.id,
+          user.userId,
           'VIEW_AUDIT_LOGS',
-          'audit-log',
-          'filtered',
-          request,
-          'error',
-          null,
           { error: error instanceof Error ? error.message : 'Unknown error' }
         );
       }

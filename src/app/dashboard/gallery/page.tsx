@@ -5,9 +5,29 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 
+interface UserProfile {
+  id: string;
+  email: string;
+  creditBalance: number;
+  registrationDate: string;
+  lastLogin: string;
+  socialLoginProvider?: string;
+}
+
+interface Image {
+  id: string;
+  originalFilename: string;
+  storagePath: string;
+  creationDate: string;
+  prompt: string;
+  modelName: string;
+  status: string;
+  userId: string;
+}
+
 export default function Gallery() {
-  const [user, setUser] = useState(null);
-  const [images, setImages] = useState([]);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [images, setImages] = useState<Image[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ total: 0, limit: 20, offset: 0, hasMore: false });
   const router = useRouter();

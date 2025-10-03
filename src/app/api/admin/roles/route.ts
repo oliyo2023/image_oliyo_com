@@ -28,18 +28,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.roles.create');
+    const hasPermission = await checkPermission(user.userId, 'admin.roles.create');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'CREATE_ROLE',
-        'role',
-        'new',
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'role',
+          resourceId: 'new',
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -89,18 +88,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the role
-    const result = await createRole(name, description, permissionIds, user.id);
+    const result = await createRole(name, description, permissionIds, user.userId);
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'CREATE_ROLE',
-      'role',
-      result.role?.id || 'new',
-      request,
-      result.success ? 'success' : 'failed',
-      null,
-      result
+      { 
+        resourceType: 'role',
+        resourceId: result.role?.id || 'new',
+        result: result 
+      }
     );
 
     return new Response(
@@ -118,14 +116,13 @@ export async function POST(request: NextRequest) {
       const user = await authenticateAdmin(request);
       if (user) {
         await logAuditAction(
-          user.id,
+          user.userId,
           'CREATE_ROLE',
-          'role',
-          'new',
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'role',
+            resourceId: 'new',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {
@@ -167,18 +164,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.roles.view');
+    const hasPermission = await checkPermission(user.userId, 'admin.roles.view');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'VIEW_ROLES',
-        'role',
-        'all',
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'role',
+          resourceId: 'all',
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -202,14 +198,14 @@ export async function GET(request: NextRequest) {
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'VIEW_ROLES',
-      'role',
-      'all',
-      request,
-      'success',
-      null,
-      { roleCount: roles.length, activeOnly }
+      { 
+        resourceType: 'role',
+        resourceId: 'all',
+        roleCount: roles.length, 
+        activeOnly 
+      }
     );
 
     return new Response(
@@ -231,14 +227,13 @@ export async function GET(request: NextRequest) {
       const user = await authenticateAdmin(request);
       if (user) {
         await logAuditAction(
-          user.id,
+          user.userId,
           'VIEW_ROLES',
-          'role',
-          'all',
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'role',
+            resourceId: 'all',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {

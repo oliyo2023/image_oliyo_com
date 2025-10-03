@@ -9,6 +9,7 @@ export interface User {
   lastLogin?: Date;
   socialLoginProvider?: string;
   isActive: boolean;
+  role?: string;
 }
 
 export interface CreditTransaction {
@@ -53,6 +54,7 @@ export interface Article {
   publicationDate?: Date;
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   lastModified?: Date;
+  imageUrl?: string | null;
 }
 
 export interface Session {

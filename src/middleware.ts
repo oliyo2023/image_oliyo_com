@@ -1,3 +1,4 @@
+import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { Ratelimit } from '@upstash/ratelimit';
@@ -28,21 +29,19 @@ interface JWTPayload {
   email: string;
 }
 
-// List of public routes that don't require authentication
-const publicRoutes = [
-  '/',
-  '/register',
-  '/login',
-  '/pricing',
-  '/about',
-  '/contact',
-  '/faq',
-  '/blog',
-  '/api/auth/register',
-  '/api/auth/login',
-  '/api/auth/login/social',
-  // Add other public routes as needed
-];
+import { getLocales } from '../i18n';
+
+// Internationalization middleware
+const internationalizationMiddleware = createMiddleware({
+  // A list of all locales that are supported
+  locales: getLocales(),
+  
+  // Used when no locale matches
+  defaultLocale: 'en',
+  
+  // Enable locale detection from browser settings
+  localeDetection: true
+});
 
 // List of admin routes that require admin role
 const adminRoutes = [
@@ -57,30 +56,29 @@ const highUsageRoutes = [
 ];
 
 export async function middleware(request: NextRequest) {
-  // Skip authentication for public routes
-  const isPublicRoute = publicRoutes.some(route => 
-    request.nextUrl.pathname === route || 
-    request.nextUrl.pathname.startsWith(route + '/')
-  );
-
-  if (isPublicRoute) {
-    // Apply rate limiting to public routes as well
-    if (request.nextUrl.pathname.startsWith('/api/')) {
-      // Use a more lenient rate limit for public API routes
-      const ip = request.ip ?? 'anonymous';
-      const { success } = await ratelimit.limit(`public_${ip}`);
-      
-      if (!success) {
-        return new NextResponse(
-          JSON.stringify({ error: 'Rate limit exceeded', message: 'Too many requests' }),
-          { status: 429, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
-    }
+  // First, handle internationalization
+  const intlResponse = internationalizationMiddleware(request);
+  
+  // For internationalized routes, we still want to apply rate limiting to API routes
+  if (intlResponse && request.nextUrl.pathname.startsWith('/api/')) {
+    // Use a more lenient rate limit for public API routes
+    const ip = request.ip ?? 'anonymous';
+    const { success } = await ratelimit.limit(`public_${ip}`);
     
-    return NextResponse.next();
+    if (!success) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Rate limit exceeded', message: 'Too many requests' }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+  }
+  
+  // If we have an internationalized response, return it
+  if (intlResponse) {
+    return intlResponse;
   }
 
+  // For non-internationalized routes, apply authentication and rate limiting
   // Check for authentication token
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   
@@ -259,5 +257,7 @@ export const config = {
      * - favicon.ico (favicon file)
      */
     '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
+    '/',
+    '/(zh|en|es|fr|de|ja)/:path*'
   ],
 };

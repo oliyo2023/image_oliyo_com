@@ -4,8 +4,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+interface UserProfile {
+  id: string;
+  email: string;
+  creditBalance: number;
+  registrationDate: string;
+  lastLogin: string;
+  socialLoginProvider?: string;
+}
+
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 

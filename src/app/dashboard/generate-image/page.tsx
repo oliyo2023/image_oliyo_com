@@ -4,6 +4,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+interface UserProfile {
+  id: string;
+  email: string;
+  creditBalance: number;
+  registrationDate: string;
+  lastLogin: string;
+  socialLoginProvider?: string;
+}
+
 export default function GenerateImage() {
   const [prompt, setPrompt] = useState('');
   const [selectedModel, setSelectedModel] = useState('qwen-image-edit');
@@ -12,7 +21,7 @@ export default function GenerateImage() {
   const [style, setStyle] = useState('realistic');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const router = useRouter();
 
   useEffect(() => {

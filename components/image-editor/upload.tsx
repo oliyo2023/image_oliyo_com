@@ -127,10 +127,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             style={{ display: 'none' }}
           />
           
-          {previewUrl ? (
+          {previewUrl && selectedFile ? (
             <div className="preview-container">
               <img src={previewUrl} alt="Preview" className="preview-image" />
-              <p className="file-info">{selectedFile?.name} ({(selectedFile?.size / (1024 * 1024)).toFixed(2)} MB)</p>
+              <p className="file-info">{selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)</p>
             </div>
           ) : (
             <div className="upload-prompt">

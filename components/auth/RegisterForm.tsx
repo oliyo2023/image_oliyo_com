@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface RegisterFormProps {
   onRegister: (email: string, password: string, confirmPassword: string) => void;
@@ -6,6 +7,7 @@ interface RegisterFormProps {
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin }) => {
+  const t = useTranslations('Auth');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -16,24 +18,24 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin
     e.preventDefault();
     
     if (!email || !password || !confirmPassword) {
-      setError('Please fill in all fields');
+      setError(t('errors.allFieldsRequired'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('errors.passwordsDoNotMatch'));
       return;
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+      setError(t('errors.invalidEmail'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError(t('errors.passwordTooShort'));
       return;
     }
 
@@ -43,7 +45,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin
     try {
       await onRegister(email, password, confirmPassword);
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      setError(t('errors.registrationFailed'));
       console.error('Registration error:', err);
     } finally {
       setIsLoading(false);
@@ -52,43 +54,43 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin
 
   return (
     <div className="register-form-component">
-      <h2>Register</h2>
+      <h2>{t('register')}</h2>
       
       {error && <div className="error-message">{error}</div>}
       
       <form onSubmit={handleSubmit} className="auth-form">
         <div className="form-group">
-          <label htmlFor="reg-email">Email:</label>
+          <label htmlFor="reg-email">{t('email')}:</label>
           <input
             type="email"
             id="reg-email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
+            placeholder={t('placeholders.email')}
             required
           />
         </div>
         
         <div className="form-group">
-          <label htmlFor="reg-password">Password:</label>
+          <label htmlFor="reg-password">{t('password')}:</label>
           <input
             type="password"
             id="reg-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
+            placeholder={t('placeholders.password')}
             required
           />
         </div>
         
         <div className="form-group">
-          <label htmlFor="confirm-password">Confirm Password:</label>
+          <label htmlFor="confirm-password">{t('confirmPassword')}:</label>
           <input
             type="password"
             id="confirm-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm your password"
+            placeholder={t('placeholders.confirmPassword')}
             required
           />
         </div>
@@ -98,17 +100,17 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin
           disabled={isLoading}
           className="submit-button"
         >
-          {isLoading ? 'Registering...' : 'Register'}
+          {isLoading ? t('registering') : t('register')}
         </button>
       </form>
       
       <div className="terms">
-        <p>By registering, you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.</p>
+        <p>{t('termsAgreement')}</p>
       </div>
       
       {onSwitchToLogin && (
         <div className="form-switch">
-          <p>Already have an account? <button onClick={onSwitchToLogin} className="switch-button">Login</button></p>
+          <p>{t('alreadyHaveAccount')} <button onClick={onSwitchToLogin} className="switch-button">{t('login')}</button></p>
         </div>
       )}
     </div>

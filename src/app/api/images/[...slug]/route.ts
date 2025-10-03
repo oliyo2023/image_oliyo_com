@@ -58,12 +58,12 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
       const limit = parseInt(searchParams.get('limit') || '20');
       const offset = parseInt(searchParams.get('offset') || '0');
       
-      const result = await getUserImageHistory(user.id, limit, offset);
+      const result = await getUserImageHistory(user.userId, limit, offset);
       
       return new Response(
         JSON.stringify(result),
         { 
-          status: result.success ? 200 : 400,
+          status: 200,
           headers: { 'Content-Type': 'application/json' }
         }
       );

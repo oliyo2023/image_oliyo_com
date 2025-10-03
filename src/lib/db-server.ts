@@ -24,13 +24,8 @@ export const {
   user,
   creditTransaction,
   image,
-  aiModel,
   article,
   session,
-  adminUser,
-  role,
-  permission,
-  auditLog,
-  resourceLock,
-  userPersonalization
+  taskQueue,
+  purchaseIntent
 } = client;

@@ -2,7 +2,7 @@
 // API routes for resource locking
 
 import { NextRequest } from 'next/server';
-import { authenticateAdmin, checkPermission, checkResourceLock, logAuditAction } from '@/middleware';
+import { authenticateAdmin, checkPermission, logAuditAction } from '@/middleware';
 import { acquireResourceLock, releaseResourceLock, checkResourceLockStatus, extendResourceLock, forceReleaseLock } from '@/lib/resource-locking';
 import { validateUUID } from '@/lib/validations';
 
@@ -43,18 +43,17 @@ export async function GET(request: NextRequest, { params }: { params: { resource
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.resources.view-lock');
+    const hasPermission = await checkPermission(user.userId, 'admin.resources.view-lock');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'CHECK_RESOURCE_LOCK_STATUS',
-        resourceType,
-        resourceId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType,
+          resourceId,
+          message: 'Insufficient permissions'
+        }
       );
 
       return new Response(
@@ -74,14 +73,13 @@ export async function GET(request: NextRequest, { params }: { params: { resource
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'CHECK_RESOURCE_LOCK_STATUS',
-      resourceType,
-      resourceId,
-      request,
-      'success',
-      null,
-      { lockStatus }
+      {
+        resourceType,
+        resourceId,
+        lockStatus
+      }
     );
 
     return new Response(
@@ -103,14 +101,13 @@ export async function GET(request: NextRequest, { params }: { params: { resource
       if (user) {
         const { resourceType, resourceId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'CHECK_RESOURCE_LOCK_STATUS',
-          resourceType,
-          resourceId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType,
+            resourceId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {
@@ -167,18 +164,17 @@ export async function POST(request: NextRequest, { params }: { params: { resourc
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.resources.acquire-lock');
+    const hasPermission = await checkPermission(user.userId, 'admin.resources.acquire-lock');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'ACQUIRE_RESOURCE_LOCK',
-        resourceType,
-        resourceId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType,
+          resourceId,
+          message: 'Insufficient permissions'
+        }
       );
 
       return new Response(
@@ -215,21 +211,21 @@ export async function POST(request: NextRequest, { params }: { params: { resourc
     const lockResult = await acquireResourceLock(
       resourceType,
       resourceId,
-      user.id,
+      user.userId,
       timeoutMs || 30000 // Default to 30 seconds
     );
 
     // Log audit action
-    await logAuditAction(
-      user.id,
-      'ACQUIRE_RESOURCE_LOCK',
-      resourceType,
-      resourceId,
-      request,
-      lockResult.success ? 'success' : 'failed',
-      null,
-      { lockResult, timeoutMs: timeoutMs || 30000 }
-    );
+      await logAuditAction(
+        user.userId,
+        'ACQUIRE_RESOURCE_LOCK',
+        { 
+          resourceType,
+          resourceId,
+          lockResult, 
+          timeoutMs: timeoutMs || 30000
+        }
+      );
 
     return new Response(
       JSON.stringify(lockResult),
@@ -247,14 +243,13 @@ export async function POST(request: NextRequest, { params }: { params: { resourc
       if (user) {
         const { resourceType, resourceId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'ACQUIRE_RESOURCE_LOCK',
-          resourceType,
-          resourceId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType,
+            resourceId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {
@@ -311,18 +306,17 @@ export async function DELETE(request: NextRequest, { params }: { params: { resou
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.resources.release-lock');
+    const hasPermission = await checkPermission(user.userId, 'admin.resources.release-lock');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'RELEASE_RESOURCE_LOCK',
-        resourceType,
-        resourceId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType,
+          resourceId,
+          message: 'Insufficient permissions'
+        }
       );
 
       return new Response(
@@ -338,18 +332,17 @@ export async function DELETE(request: NextRequest, { params }: { params: { resou
     }
 
     // Release resource lock
-    const releaseResult = await releaseResourceLock(resourceType, resourceId, user.id);
+    const releaseResult = await releaseResourceLock(resourceType, resourceId, user.userId);
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'RELEASE_RESOURCE_LOCK',
-      resourceType,
-      resourceId,
-      request,
-      releaseResult.success ? 'success' : 'failed',
-      null,
-      { releaseResult }
+      { 
+        resourceType,
+        resourceId,
+        releaseResult
+      }
     );
 
     return new Response(
@@ -368,14 +361,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { resou
       if (user) {
         const { resourceType, resourceId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'RELEASE_RESOURCE_LOCK',
-          resourceType,
-          resourceId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType,
+            resourceId,
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          }
         );
       }
     } catch (logError) {
@@ -432,19 +424,18 @@ export async function PUT(request: NextRequest, { params }: { params: { resource
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.resources.extend-lock');
+    const hasPermission = await checkPermission(user.userId, 'admin.resources.extend-lock');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
-        'EXTEND_RESOURCE_LOCK',
-        resourceType,
-        resourceId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
-      );
+          user.userId,
+          'EXTEND_RESOURCE_LOCK',
+          { 
+            resourceType,
+            resourceId,
+            message: 'Insufficient permissions'
+          }
+        );
 
       return new Response(
         JSON.stringify({ 
@@ -482,14 +473,14 @@ export async function PUT(request: NextRequest, { params }: { params: { resource
     if (!lockStatus.isLocked) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'EXTEND_RESOURCE_LOCK',
-        resourceType,
-        resourceId,
-        request,
-        'failed',
-        null,
-        { message: 'Resource is not locked', lockStatus }
+        { 
+          resourceType,
+          resourceId,
+          message: 'Resource is not locked',
+          lockStatus
+        }
       );
 
       return new Response(
@@ -504,17 +495,17 @@ export async function PUT(request: NextRequest, { params }: { params: { resource
       );
     }
 
-    if (lockStatus.lockedBy.id !== user.id) {
+    if (lockStatus.lockedBy.id !== user.userId) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'EXTEND_RESOURCE_LOCK',
-        resourceType,
-        resourceId,
-        request,
-        'failed',
-        null,
-        { message: 'Resource locked by another user', lockStatus }
+        { 
+          resourceType,
+          resourceId,
+          message: 'Resource locked by another user',
+          lockStatus
+        }
       );
 
       return new Response(
@@ -532,20 +523,20 @@ export async function PUT(request: NextRequest, { params }: { params: { resource
     // Extend the resource lock
     const extendResult = await extendResourceLock(
       lockStatus.lockId,
-      user.id,
+      user.userId,
       extensionMs || 30000 // Default to 30 seconds
     );
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'EXTEND_RESOURCE_LOCK',
-      resourceType,
-      resourceId,
-      request,
-      extendResult.success ? 'success' : 'failed',
-      null,
-      { extendResult, extensionMs: extensionMs || 30000 }
+      { 
+        resourceType,
+        resourceId,
+        extendResult,
+        extensionMs: extensionMs || 30000
+      }
     );
 
     return new Response(
@@ -564,14 +555,13 @@ export async function PUT(request: NextRequest, { params }: { params: { resource
       if (user) {
         const { resourceType, resourceId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'EXTEND_RESOURCE_LOCK',
-          resourceType,
-          resourceId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType,
+            resourceId,
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          }
         );
       }
     } catch (logError) {
@@ -628,18 +618,17 @@ export async function PATCH(request: NextRequest, { params }: { params: { resour
     }
 
     // Check permission for force release
-    const hasPermission = await checkPermission(user, 'admin.resources.force-release-lock');
+    const hasPermission = await checkPermission(user.userId, 'admin.resources.force-release-lock');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'FORCE_RELEASE_RESOURCE_LOCK',
-        resourceType,
-        resourceId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType,
+          resourceId,
+          message: 'Insufficient permissions'
+        }
       );
 
       return new Response(
@@ -660,14 +649,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { resour
     if (!lockStatus.isLocked) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'FORCE_RELEASE_RESOURCE_LOCK',
-        resourceType,
-        resourceId,
-        request,
-        'failed',
-        null,
-        { message: 'Resource is not locked', lockStatus }
+        { 
+          resourceType,
+          resourceId,
+          message: 'Resource is not locked',
+          lockStatus
+        }
       );
 
       return new Response(
@@ -683,18 +672,18 @@ export async function PATCH(request: NextRequest, { params }: { params: { resour
     }
 
     // Force release the resource lock
-    const forceReleaseResult = await forceReleaseLock(lockStatus.lockId, user.id);
+    const forceReleaseResult = await forceReleaseLock(lockStatus.lockId, user.userId);
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'FORCE_RELEASE_RESOURCE_LOCK',
-      resourceType,
-      resourceId,
-      request,
-      forceReleaseResult.success ? 'success' : 'failed',
-      null,
-      { forceReleaseResult, originalLockOwner: lockStatus.lockedBy.id }
+      { 
+        resourceType,
+        resourceId,
+        forceReleaseResult,
+        originalLockOwner: lockStatus.lockedBy.id
+      }
     );
 
     return new Response(
@@ -713,14 +702,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { resour
       if (user) {
         const { resourceType, resourceId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'FORCE_RELEASE_RESOURCE_LOCK',
-          resourceType,
-          resourceId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType,
+            resourceId,
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          }
         );
       }
     } catch (logError) {

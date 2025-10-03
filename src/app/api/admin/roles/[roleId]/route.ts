@@ -43,18 +43,17 @@ export async function PUT(request: NextRequest, { params }: { params: { roleId: 
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.roles.update');
+    const hasPermission = await checkPermission(user.userId, 'admin.roles.update');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'UPDATE_ROLE',
-        'role',
-        roleId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'role',
+          resourceId: roleId,
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -106,14 +105,14 @@ export async function PUT(request: NextRequest, { params }: { params: { roleId: 
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'UPDATE_ROLE',
-      'role',
-      roleId,
-      request,
-      result.success ? 'success' : 'failed',
-      currentRole,
-      result
+      { 
+        resourceType: 'role',
+        resourceId: roleId,
+        result,
+        currentRole
+      }
     );
 
     return new Response(
@@ -132,14 +131,13 @@ export async function PUT(request: NextRequest, { params }: { params: { roleId: 
       if (user) {
         const { roleId } = await request.json().catch(() => ({ roleId: 'unknown' }));
         await logAuditAction(
-          user.id,
+          user.userId,
           'UPDATE_ROLE',
-          'role',
-          roleId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'role',
+            resourceId: roleId,
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          }
         );
       }
     } catch (logError) {
@@ -196,18 +194,17 @@ export async function GET(request: NextRequest, { params }: { params: { roleId: 
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.roles.view');
+    const hasPermission = await checkPermission(user.userId, 'admin.roles.view');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'VIEW_ROLE',
-        'role',
-        roleId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'role',
+          resourceId: roleId,
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -228,14 +225,13 @@ export async function GET(request: NextRequest, { params }: { params: { roleId: 
     if (!result) {
       // Log audit action for not found
       await logAuditAction(
-        user.id,
+        user.userId,
         'VIEW_ROLE',
-        'role',
-        roleId,
-        request,
-        'failed',
-        null,
-        { message: 'Role not found' }
+        { 
+          resourceType: 'role',
+          resourceId: roleId,
+          message: 'Role not found' 
+        }
       );
 
       return new Response(
@@ -252,14 +248,13 @@ export async function GET(request: NextRequest, { params }: { params: { roleId: 
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'VIEW_ROLE',
-      'role',
-      roleId,
-      request,
-      'success',
-      null,
-      { roleId }
+      { 
+        resourceType: 'role',
+        resourceId: roleId,
+        roleId
+      }
     );
 
     return new Response(
@@ -281,14 +276,13 @@ export async function GET(request: NextRequest, { params }: { params: { roleId: 
       if (user) {
         const { roleId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'VIEW_ROLE',
-          'role',
-          roleId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'role',
+            resourceId: roleId,
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          }
         );
       }
     } catch (logError) {
@@ -345,18 +339,17 @@ export async function DELETE(request: NextRequest, { params }: { params: { roleI
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.roles.delete');
+    const hasPermission = await checkPermission(user.userId, 'admin.roles.delete');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'DELETE_ROLE',
-        'role',
-        roleId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'role',
+          resourceId: roleId,
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -376,14 +369,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { roleI
     if (!currentRole) {
       // Log audit action for not found
       await logAuditAction(
-        user.id,
+        user.userId,
         'DELETE_ROLE',
-        'role',
-        roleId,
-        request,
-        'failed',
-        null,
-        { message: 'Role not found' }
+        { 
+          resourceType: 'role',
+          resourceId: roleId,
+          message: 'Role not found' 
+        }
       );
 
       return new Response(
@@ -403,14 +395,14 @@ export async function DELETE(request: NextRequest, { params }: { params: { roleI
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'DELETE_ROLE',
-      'role',
-      roleId,
-      request,
-      result.success ? 'success' : 'failed',
-      currentRole,
-      result
+      { 
+        resourceType: 'role',
+        resourceId: roleId,
+        result,
+        currentRole
+      }
     );
 
     return new Response(
@@ -433,14 +425,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { roleI
       if (user) {
         const { roleId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'DELETE_ROLE',
-          'role',
-          roleId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'role',
+            resourceId: roleId,
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          }
         );
       }
     } catch (logError) {

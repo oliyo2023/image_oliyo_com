@@ -14,7 +14,7 @@ async function createTestUser() {
     
     // Check if test user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: 'test@example.com' }
+      where: { email: '1034640452@qq.com' }
     });
     
     if (existingUser) {
@@ -27,17 +27,17 @@ async function createTestUser() {
     
     // Hash password
     const saltRounds = 10;
-    const passwordHash = await bcrypt.hash('TestPassword123!', saltRounds);
+    const passwordHash = await bcrypt.hash('gemini4094', saltRounds);
     
     // Create user
     const user = await prisma.user.create({
       data: {
-        email: 'test@example.com',
+        email: '1034640452@qq.com',
         passwordHash: passwordHash,
         creditBalance: 100,
         registrationDate: new Date(),
         isActive: true,
-        role: 'user'
+        role: 'admin'
       }
     });
     

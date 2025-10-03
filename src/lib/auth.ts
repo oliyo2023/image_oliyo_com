@@ -187,7 +187,20 @@ export async function socialLogin(provider: string, socialToken: string): Promis
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const verified = await jwtVerify(token, JWT_SECRET);
-    return verified.payload as JWTPayload;
+    const payload = verified.payload;
+    
+    // Type guard to ensure payload has required properties
+    if (typeof payload === 'object' && payload !== null && 'userId' in payload && 'email' in payload) {
+      return {
+        jti: (payload as any).jti || '',
+        iat: (payload as any).iat || 0,
+        exp: (payload as any).exp || 0,
+        userId: (payload as any).userId,
+        email: (payload as any).email
+      };
+    }
+    
+    return null;
   } catch (error) {
     console.error('Token verification failed:', error);
     return null;
@@ -200,12 +213,17 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 export async function authenticateToken(token: string): Promise<{ userId: string; email: string } | null> {
   try {
     const verified = await jwtVerify(token, JWT_SECRET);
-    const payload = verified.payload as JWTPayload;
+    const payload = verified.payload;
     
-    return {
-      userId: payload.userId,
-      email: payload.email
-    };
+    // Type guard to ensure payload has required properties
+    if (typeof payload === 'object' && payload !== null && 'userId' in payload && 'email' in payload) {
+      return {
+        userId: (payload as any).userId,
+        email: (payload as any).email
+      };
+    }
+    
+    return null;
   } catch (error) {
     console.error('Token authentication failed:', error);
     return null;
@@ -274,7 +292,7 @@ export async function logout(token: string): Promise<boolean> {
 /**
  * Gets user profile by ID
  */
-export async function getUserProfile(userId: string): Promise<User | null> {
+export async function getUserProfile(userId: string): Promise<any | null> {
   return prisma.user.findUnique({
     where: { id: userId },
     // Don't return password hash

@@ -103,8 +103,16 @@ export class UserService {
     
     // If password is being updated, hash it
     if (updateData.password) {
-      updateData.passwordHash = await hashPassword(updateData.password);
+      const passwordHash = await hashPassword(updateData.password);
       delete updateData.password;
+      
+      return prisma.user.update({
+        where: { id },
+        data: {
+          ...updateData,
+          passwordHash
+        }
+      });
     }
     
     return prisma.user.update({

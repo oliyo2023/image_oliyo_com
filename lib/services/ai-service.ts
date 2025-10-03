@@ -29,6 +29,8 @@ export interface ProcessImageResult {
   originalImageId?: string;
   message?: string;
   error?: string;
+  requiredCredits?: number;
+  currentCredits?: number;
 }
 
 export class AIService {

@@ -24,10 +24,23 @@ export async function POST(request: NextRequest) {
     // Social login the user
     const result = await socialLogin(provider, socialToken);
 
+    if (!result) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Social login failed' 
+        }),
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     return new Response(
       JSON.stringify(result),
       { 
-        status: result.success ? 200 : 401,
+        status: result.user ? 200 : 401,
         headers: { 'Content-Type': 'application/json' }
       }
     );

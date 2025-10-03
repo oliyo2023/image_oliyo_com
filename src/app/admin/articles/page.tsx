@@ -353,7 +353,7 @@ export default function AdminArticles() {
                     value={editingArticle ? editingArticle.imageUrl || '' : newArticle.imageUrl}
                     onChange={(e) => 
                       editingArticle 
-                        ? setEditingArticle({...editingArticle, imageUrl: e.target.value || null}) 
+                        ? setEditingArticle({...editingArticle, imageUrl: e.target.value || undefined}) 
                         : setNewArticle({...newArticle, imageUrl: e.target.value})
                     }
                     style={{

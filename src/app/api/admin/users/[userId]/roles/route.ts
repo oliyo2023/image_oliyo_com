@@ -13,7 +13,7 @@ import { validateUUID } from '@/lib/validations';
 export async function POST(request: NextRequest, { params }: { params: { userId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -43,18 +43,17 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.users.assign-roles');
+    const hasPermission = await checkPermission(user.userId, 'admin.users.assign-roles');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'ASSIGN_ROLES_TO_USER',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'Insufficient permissions'
+        }
       );
 
       return new Response(
@@ -71,14 +70,14 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
 
     // Parse request body
     const body = await request.json();
-    const { roleIds } = body;
+    const { roleName } = body;
 
     // Validate required fields
-    if (!roleIds || !Array.isArray(roleIds)) {
+    if (!roleName || typeof roleName !== 'string') {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: 'Bad Request: roleIds is required and must be an array' 
+          message: 'Bad Request: roleName is required and must be a string' 
         }),
         { 
           status: 400,
@@ -87,38 +86,23 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
       );
     }
 
-    // Validate role IDs format
-    for (const roleId of roleIds) {
-      if (!validateUUID(roleId)) {
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            message: `Bad Request: Invalid role ID format: ${roleId}` 
-          }),
-          { 
-            status: 400,
-            headers: { 'Content-Type': 'application/json' }
-          }
-        );
-      }
-    }
-
     // Get current user for audit log
     const currentUser = await getAdminUserById(userId);
 
-    // Assign roles to user
-    const result = await assignRolesToAdminUser(userId, roleIds);
+    // Assign role to user
+    const result = await assignRolesToAdminUser(userId, roleName);
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'ASSIGN_ROLES_TO_USER',
-      'user',
-      userId,
-      request,
-      result.success ? 'success' : 'failed',
-      currentUser,
-      result
+      { 
+        resourceType: 'user',
+        resourceId: userId,
+        status: result.success ? 'success' : 'failed',
+        userDetails: currentUser,
+        result: result
+      }
     );
 
     return new Response(
@@ -133,18 +117,17 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { userId } = params;
         await logAuditAction(
-          user.id,
-          'ASSIGN_ROLES_TO_USER',
-          'user',
-          userId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          user.userId,
+          'ASSIGN_ROLES_TO_USER_ERROR',
+          { 
+            resourceType: 'user',
+            resourceId: userId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {
@@ -171,7 +154,7 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
 export async function GET(request: NextRequest, { params }: { params: { userId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -201,18 +184,17 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.users.view-roles');
+    const hasPermission = await checkPermission(user.userId, 'admin.users.view-roles');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'VIEW_USER_ROLES',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'Insufficient permissions'
+        }
       );
 
       return new Response(
@@ -233,14 +215,13 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
     if (!userWithRoles) {
       // Log audit action for not found
       await logAuditAction(
-        user.id,
+        user.userId,
         'VIEW_USER_ROLES',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'User not found' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'User not found'
+        }
       );
 
       return new Response(
@@ -257,14 +238,14 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'VIEW_USER_ROLES',
-      'user',
-      userId,
-      request,
-      'success',
-      null,
-      { userId, roleCount: userWithRoles.roles?.length || 0 }
+      { 
+        resourceType: 'user',
+        resourceId: userId,
+        userId, 
+        roleCount: userWithRoles.roles?.length || 0
+      }
     );
 
     return new Response(
@@ -287,18 +268,17 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { userId } = params;
         await logAuditAction(
-          user.id,
-          'VIEW_USER_ROLES',
-          'user',
-          userId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          user.userId,
+          'VIEW_USER_ROLES_ERROR',
+          { 
+            resourceType: 'user',
+            resourceId: userId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {
@@ -325,7 +305,7 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
 export async function DELETE(request: NextRequest, { params }: { params: { userId: string, roleId: string } }) {
   try {
     // Authenticate admin user
-    const user = await authenticateAdmin(request, {} as any);
+    const user = await authenticateAdmin(request);
     if (!user) {
       return new Response(
         JSON.stringify({ 
@@ -355,18 +335,18 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.users.remove-roles');
+    const hasPermission = await checkPermission(user.userId, 'admin.users.remove-roles');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'REMOVE_ROLE_FROM_USER',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions', roleId }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'Insufficient permissions', 
+          roleId
+        }
       );
 
       return new Response(
@@ -389,14 +369,15 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'REMOVE_ROLE_FROM_USER',
-      'user',
-      userId,
-      request,
-      result.success ? 'success' : 'failed',
-      currentUser,
-      result
+      { 
+        resourceType: 'user',
+        resourceId: userId,
+        status: result.success ? 'success' : 'failed',
+        userDetails: currentUser,
+        result: result
+      }
     );
 
     return new Response(
@@ -411,18 +392,18 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
     
     // Log audit action for error
     try {
-      const user = await authenticateAdmin(request, {} as any);
+      const user = await authenticateAdmin(request);
       if (user) {
         const { userId, roleId } = params;
         await logAuditAction(
-          user.id,
-          'REMOVE_ROLE_FROM_USER',
-          'user',
-          userId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error', roleId }
+          user.userId,
+          'REMOVE_ROLE_FROM_USER_ERROR',
+          { 
+            resourceType: 'user',
+            resourceId: userId,
+            roleId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {

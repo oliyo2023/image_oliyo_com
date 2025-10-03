@@ -51,9 +51,8 @@ export class ImageService {
         prompt,
         fileFormat,
         fileSize,
-        imageType,
         originalImageId,
-        modelName,
+        modelName: modelName || '', // Provide empty string as default if undefined
         status: 'completed' // Default to completed unless processing is needed
       }
     });
@@ -114,7 +113,7 @@ export class ImageService {
   /**
    * Gets an image with its original (for edited images)
    */
-  async getImageWithOriginal(id: string): Promise<(Image & { originalImage?: Image }) | null> {
+  async getImageWithOriginal(id: string): Promise<(Image & { originalImage: Image | null }) | null> {
     const image = await prisma.image.findUnique({
       where: { id },
       include: {
@@ -131,12 +130,7 @@ export class ImageService {
   async getUserGallery(userId: string): Promise<Image[]> {
     return prisma.image.findMany({
       where: { 
-        userId,
-        OR: [
-          { imageType: 'GENERATED' },
-          { imageType: 'EDITED' },
-          { imageType: 'UPLOADED' }
-        ]
+        userId
       },
       orderBy: { creationDate: 'desc' }
     });
@@ -146,22 +140,19 @@ export class ImageService {
    * Gets statistics about user's images
    */
   async getUserImageStats(userId: string) {
-    const stats = await prisma.image.groupBy({
-      by: ['imageType'],
+    const images = await prisma.image.findMany({
       where: { userId },
-      _count: true,
-      _sum: {
+      select: {
         fileSize: true
       }
     });
 
-    const totalImages = stats.reduce((sum, stat) => sum + stat._count, 0);
-    const totalSize = stats.reduce((sum, stat) => sum + (stat._sum.fileSize || 0), 0);
+    const totalImages = images.length;
+    const totalSize = images.reduce((sum, image) => sum + (image.fileSize || 0), 0);
 
     return {
       totalImages,
-      totalSize,
-      byType: stats
+      totalSize
     };
   }
 

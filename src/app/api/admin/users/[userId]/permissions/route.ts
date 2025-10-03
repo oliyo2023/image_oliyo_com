@@ -44,18 +44,17 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.users.view-permissions');
+    const hasPermission = await checkPermission(user.userId, 'admin.users.view-permissions');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'VIEW_USER_PERMISSIONS',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -75,14 +74,13 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
     if (!targetUser) {
       // Log audit action for not found
       await logAuditAction(
-        user.id,
+        user.userId,
         'VIEW_USER_PERMISSIONS',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'User not found' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'User not found' 
+        }
       );
 
       return new Response(
@@ -102,14 +100,14 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'VIEW_USER_PERMISSIONS',
-      'user',
-      userId,
-      request,
-      'success',
-      null,
-      { userId, permissionCount: permissions.length }
+      { 
+        resourceType: 'user',
+        resourceId: userId,
+        userId, 
+        permissionCount: permissions.length 
+      }
     );
 
     return new Response(
@@ -132,14 +130,13 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
       if (user) {
         const { userId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'VIEW_USER_PERMISSIONS',
-          'user',
-          userId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'user',
+            resourceId: userId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {
@@ -196,18 +193,17 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.users.assign-permissions');
+    const hasPermission = await checkPermission(user.userId, 'admin.users.assign-permissions');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'ASSIGN_PERMISSIONS_TO_USER',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -261,14 +257,13 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
     if (!targetUser) {
       // Log audit action for not found
       await logAuditAction(
-        user.id,
+        user.userId,
         'ASSIGN_PERMISSIONS_TO_USER',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'User not found' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'User not found' 
+        }
       );
 
       return new Response(
@@ -289,14 +284,13 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'ASSIGN_PERMISSIONS_TO_USER',
-      'user',
-      userId,
-      request,
-      'failed',
-      null,
-      { message: 'Direct permission assignment not supported - assign through roles instead' }
+      { 
+        resourceType: 'user',
+        resourceId: userId,
+        message: 'Direct permission assignment not supported - assign through roles instead' 
+      }
     );
 
     return new Response(
@@ -318,14 +312,13 @@ export async function POST(request: NextRequest, { params }: { params: { userId:
       if (user) {
         const { userId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'ASSIGN_PERMISSIONS_TO_USER',
-          'user',
-          userId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'user',
+            resourceId: userId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {
@@ -382,18 +375,18 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
     }
 
     // Check permission
-    const hasPermission = await checkPermission(user, 'admin.users.remove-permissions');
+    const hasPermission = await checkPermission(user.userId, 'admin.users.remove-permissions');
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'REMOVE_PERMISSION_FROM_USER',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions', permissionId }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'Insufficient permissions', 
+          permissionId 
+        }
       );
 
       return new Response(
@@ -413,14 +406,14 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
     if (!targetUser) {
       // Log audit action for not found
       await logAuditAction(
-        user.id,
+        user.userId,
         'REMOVE_PERMISSION_FROM_USER',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'User not found', permissionId }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'User not found', 
+          permissionId 
+        }
       );
 
       return new Response(
@@ -441,14 +434,14 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'REMOVE_PERMISSION_FROM_USER',
-      'user',
-      userId,
-      request,
-      'failed',
-      null,
-      { message: 'Direct permission removal not supported - remove through roles instead', permissionId }
+      { 
+        resourceType: 'user',
+        resourceId: userId,
+        message: 'Direct permission removal not supported - remove through roles instead', 
+        permissionId 
+      }
     );
 
     return new Response(
@@ -470,14 +463,14 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
       if (user) {
         const { userId, permissionId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'REMOVE_PERMISSION_FROM_USER',
-          'user',
-          userId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error', permissionId }
+          { 
+            resourceType: 'user',
+            resourceId: userId,
+            error: error instanceof Error ? error.message : 'Unknown error', 
+            permissionId 
+          }
         );
       }
     } catch (logError) {

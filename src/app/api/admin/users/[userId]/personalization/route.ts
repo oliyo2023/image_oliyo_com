@@ -44,20 +44,19 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
     }
 
     // Check permission - users can view their own personalization, admins can view anyone's
-    const isOwnProfile = user.id === userId;
-    const hasPermission = isOwnProfile || await checkPermission(user, 'admin.users.view-personalization');
+    const isOwnProfile = user.userId === userId;
+    const hasPermission = isOwnProfile || await checkPermission(user.userId, 'admin.users.view-personalization');
     
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'VIEW_USER_PERSONALIZATION',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -77,14 +76,13 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
     if (!targetUser) {
       // Log audit action for not found
       await logAuditAction(
-        user.id,
+        user.userId,
         'VIEW_USER_PERSONALIZATION',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'User not found' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'User not found' 
+        }
       );
 
       return new Response(
@@ -104,14 +102,14 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'VIEW_USER_PERSONALIZATION',
-      'user',
-      userId,
-      request,
-      'success',
-      null,
-      { userId, hasPersonalization: !!personalization }
+      { 
+        resourceType: 'user',
+        resourceId: userId,
+        userId, 
+        hasPersonalization: !!personalization 
+      }
     );
 
     return new Response(
@@ -133,14 +131,13 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
       if (user) {
         const { userId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'VIEW_USER_PERSONALIZATION',
-          'user',
-          userId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'user',
+            resourceId: userId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {
@@ -197,20 +194,19 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
     }
 
     // Check permission - users can update their own personalization, admins can update anyone's
-    const isOwnProfile = user.id === userId;
-    const hasPermission = isOwnProfile || await checkPermission(user, 'admin.users.update-personalization');
+    const isOwnProfile = user.userId === userId;
+    const hasPermission = isOwnProfile || await checkPermission(user.userId, 'admin.users.update-personalization');
     
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'UPDATE_USER_PERSONALIZATION',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -230,14 +226,13 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
     if (!targetUser) {
       // Log audit action for not found
       await logAuditAction(
-        user.id,
+        user.userId,
         'UPDATE_USER_PERSONALIZATION',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'User not found' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'User not found' 
+        }
       );
 
       return new Response(
@@ -262,14 +257,13 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
 
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'RESET_USER_PERSONALIZATION',
-        'user',
-        userId,
-        request,
-        resetResult.success ? 'success' : 'failed',
-        null,
-        { resetResult }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          result: resetResult 
+        }
       );
 
       return new Response(
@@ -294,7 +288,7 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
         return new Response(
           JSON.stringify({ 
             success: false, 
-            message: `Bad Request: ${layoutValidation.error}` 
+            message: `Bad Request: ${layoutValidation.errors?.join(', ') || 'Invalid dashboard layout'}` 
           }),
           { 
             status: 400,
@@ -303,7 +297,7 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
         );
       }
       
-      updateResult = await updateDashboardLayout(userId, layoutValidation.layout);
+      updateResult = await updateDashboardLayout(userId, layoutValidation.sanitizedLayout);
     } 
     else if (themeSettings !== undefined) {
       updateResult = await updateThemeSettings(userId, themeSettings);
@@ -329,14 +323,14 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'UPDATE_USER_PERSONALIZATION',
-      'user',
-      userId,
-      request,
-      updateResult.success ? 'success' : 'failed',
-      currentPersonalization,
-      updateResult
+      { 
+        resourceType: 'user',
+        resourceId: userId,
+        result: updateResult,
+        currentPersonalization
+      }
     );
 
     return new Response(
@@ -355,14 +349,13 @@ export async function PUT(request: NextRequest, { params }: { params: { userId: 
       if (user) {
         const { userId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'UPDATE_USER_PERSONALIZATION',
-          'user',
-          userId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'user',
+            resourceId: userId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {
@@ -419,20 +412,19 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
     }
 
     // Check permission - users can reset their own personalization, admins can reset anyone's
-    const isOwnProfile = user.id === userId;
-    const hasPermission = isOwnProfile || await checkPermission(user, 'admin.users.reset-personalization');
+    const isOwnProfile = user.userId === userId;
+    const hasPermission = isOwnProfile || await checkPermission(user.userId, 'admin.users.reset-personalization');
     
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'RESET_USER_PERSONALIZATION',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -452,14 +444,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
     if (!targetUser) {
       // Log audit action for not found
       await logAuditAction(
-        user.id,
+        user.userId,
         'RESET_USER_PERSONALIZATION',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'User not found' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'User not found' 
+        }
       );
 
       return new Response(
@@ -482,14 +473,14 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'RESET_USER_PERSONALIZATION',
-      'user',
-      userId,
-      request,
-      resetResult.success ? 'success' : 'failed',
-      currentPersonalization,
-      resetResult
+      { 
+        resourceType: 'user',
+        resourceId: userId,
+        result: resetResult,
+        currentPersonalization
+      }
     );
 
     return new Response(
@@ -508,14 +499,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { userI
       if (user) {
         const { userId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'RESET_USER_PERSONALIZATION',
-          'user',
-          userId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'user',
+            resourceId: userId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {
@@ -572,20 +562,19 @@ export async function PATCH(request: NextRequest, { params }: { params: { userId
     }
 
     // Check permission - users can update their own layout, admins can update anyone's
-    const isOwnProfile = user.id === userId;
-    const hasPermission = isOwnProfile || await checkPermission(user, 'admin.users.update-layout');
+    const isOwnProfile = user.userId === userId;
+    const hasPermission = isOwnProfile || await checkPermission(user.userId, 'admin.users.update-layout');
     
     if (!hasPermission) {
       // Log audit action
       await logAuditAction(
-        user.id,
+        user.userId,
         'UPDATE_DASHBOARD_LAYOUT',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'Insufficient permissions' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'Insufficient permissions' 
+        }
       );
 
       return new Response(
@@ -605,14 +594,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { userId
     if (!targetUser) {
       // Log audit action for not found
       await logAuditAction(
-        user.id,
+        user.userId,
         'UPDATE_DASHBOARD_LAYOUT',
-        'user',
-        userId,
-        request,
-        'failed',
-        null,
-        { message: 'User not found' }
+        { 
+          resourceType: 'user',
+          resourceId: userId,
+          message: 'User not found' 
+        }
       );
 
       return new Response(
@@ -637,7 +625,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { userId
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: `Bad Request: ${layoutValidation.error}` 
+          message: `Bad Request: ${layoutValidation.errors?.join(', ') || 'Invalid dashboard layout'}` 
         }),
         { 
           status: 400,
@@ -650,18 +638,18 @@ export async function PATCH(request: NextRequest, { params }: { params: { userId
     const currentPersonalization = await getUserPersonalization(userId);
 
     // Update dashboard layout
-    const updateResult = await updateDashboardLayout(userId, layoutValidation.layout);
+    const updateResult = await updateDashboardLayout(userId, layoutValidation.sanitizedLayout);
 
     // Log audit action
     await logAuditAction(
-      user.id,
+      user.userId,
       'UPDATE_DASHBOARD_LAYOUT',
-      'user',
-      userId,
-      request,
-      updateResult.success ? 'success' : 'failed',
-      currentPersonalization,
-      updateResult
+      { 
+        resourceType: 'user',
+        resourceId: userId,
+        result: updateResult,
+        currentPersonalization
+      }
     );
 
     return new Response(
@@ -680,14 +668,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { userId
       if (user) {
         const { userId } = params;
         await logAuditAction(
-          user.id,
+          user.userId,
           'UPDATE_DASHBOARD_LAYOUT',
-          'user',
-          userId,
-          request,
-          'error',
-          null,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
+          { 
+            resourceType: 'user',
+            resourceId: userId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
         );
       }
     } catch (logError) {

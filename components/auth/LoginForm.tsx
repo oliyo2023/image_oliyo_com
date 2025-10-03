@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface LoginFormProps {
   onLogin: (email: string, password: string) => void;
@@ -6,6 +7,7 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister }) => {
+  const t = useTranslations('Auth');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +17,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister }) =>
     e.preventDefault();
     
     if (!email || !password) {
-      setError('Please enter both email and password');
+      setError(t('errors.emailAndPasswordRequired'));
       return;
     }
 
@@ -25,7 +27,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister }) =>
     try {
       await onLogin(email, password);
     } catch (err) {
-      setError('Login failed. Please check your credentials and try again.');
+      setError(t('errors.loginFailed'));
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
@@ -34,31 +36,31 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister }) =>
 
   return (
     <div className="login-form-component">
-      <h2>Login</h2>
+      <h2>{t('login')}</h2>
       
       {error && <div className="error-message">{error}</div>}
       
       <form onSubmit={handleSubmit} className="auth-form">
         <div className="form-group">
-          <label htmlFor="email">Email:</label>
+          <label htmlFor="email">{t('email')}:</label>
           <input
             type="email"
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
+            placeholder={t('placeholders.email')}
             required
           />
         </div>
         
         <div className="form-group">
-          <label htmlFor="password">Password:</label>
+          <label htmlFor="password">{t('password')}:</label>
           <input
             type="password"
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
+            placeholder={t('placeholders.password')}
             required
           />
         </div>
@@ -68,18 +70,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister }) =>
           disabled={isLoading}
           className="submit-button"
         >
-          {isLoading ? 'Logging in...' : 'Login'}
+          {isLoading ? t('loggingIn') : t('login')}
         </button>
       </form>
       
       {onSwitchToRegister && (
         <div className="form-switch">
-          <p>Don't have an account? <button onClick={onSwitchToRegister} className="switch-button">Register</button></p>
+          <p>{t('noAccount')} <button onClick={onSwitchToRegister} className="switch-button">{t('register')}</button></p>
         </div>
       )}
       
       <div className="auth-options">
-        <a href="#" className="forgot-password">Forgot Password?</a>
+        <a href="#" className="forgot-password">{t('forgotPassword')}</a>
       </div>
     </div>
   );

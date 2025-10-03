@@ -1,5 +1,5 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
-import { getUserIdFromSession } from '../lib/utils/session';
+import { getUserIdFromSession } from '../utils/session';
 
 export function withAuth(handler: NextApiHandler) {
   return async (req: NextApiRequest, res: NextApiResponse) => {

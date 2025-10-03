@@ -1,60 +1,229 @@
 # Research: AI Image Generation and Editing Website
 
-## Overview
-This research document outlines the key technical decisions and findings for implementing the AI image generation and editing website with credit-based system.
+**Feature**: AI Image Generation and Editing Website  
+**Date**: 2025-10-03  
+**Spec**: E:\project\oliyo.com\specs\001-qwen-image-edit\spec.md
 
-## Decision: AI Model Integration
-**Rationale**: The feature specification requires integration with qwen-image-edit and gemini-flash-image models for image generation and editing capabilities.
-**Alternatives considered**: 
-- Only one AI model (reduces flexibility)
-- Other AI models like DALL-E, Midjourney (licensing/cost constraints)
-- Open-source models (requires more infrastructure)
+## Research Findings
 
-## Decision: Credit System Architecture
-**Rationale**: To manage usage and costs, implementing a credit-based system where qwen-image-edit costs 5 credits and gemini-flash-image costs 10 credits.
-**Alternatives considered**:
-- Time-based usage limits (harder to manage variable processing times)
-- Subscription model (less flexible for casual users)
-- Ad-supported model (conflicts with user experience goals)
+### AI Model Integration
 
-## Decision: Authentication System
-**Rationale**: Using email/password authentication with optional social login (Google, Facebook) to provide security and user convenience.
-**Alternatives considered**:
-- Only social login (limits user options)
-- Only email/password (reduces user convenience)
-- OAuth2 with custom providers (increased complexity)
+**Decision**: Use qwen-image-edit and gemini-flash-image models via API integration
+**Rationale**:
 
-## Decision: Image Storage and Management
-**Rationale**: Implementing secure storage for user-uploaded and generated images with support for common formats up to 50MB files, with HTTPS encryption.
-**Alternatives considered**:
-- Client-side encryption (increased complexity for users)
-- Direct cloud storage links (security concerns)
-- Temporary storage only (limits user functionality)
+- Both models support text-to-image generation and image editing capabilities
+- qwen-image-edit: 5 credits per operation (more cost-effective)
+- gemini-flash-image: 10 credits per operation (premium features)
+- Models support image-to-image editing workflows
+  **Alternatives considered**:
+- OpenAI DALL-E: More expensive, limited editing capabilities
+- Stable Diffusion: Self-hosted option but requires more infrastructure
+- Midjourney: API limitations, less suitable for integration
 
-## Decision: Tech Stack
-**Rationale**: Using Next.js 14+, TypeScript, Node.js 18+, and Vercel deployment to align with constitutional requirements and ensure performance, security, and maintainability.
-**Alternatives considered**:
-- React + separate backend (increased complexity)
-- Other frameworks (deviate from constitutional requirements)
-- Pure backend API (misses Next.js benefits like SSR/SSG)
+### Authentication System
 
-## Decision: Database Solution
-**Rationale**: Using PostgreSQL with Prisma ORM to handle user accounts, credit transactions, image metadata, and articles as required by constitutional guidelines.
-**Alternatives considered**:
-- MongoDB (less structured for transactional data)
-- SQLite (insufficient for production scale)
-- No database (impractical for user data management)
+**Decision**: Email/password with optional social login (Google, Facebook)
+**Rationale**:
 
-## Decision: Security Approach
-**Rationale**: Implementing basic security with standard HTTPS, server-side validation, authentication/authorization as per constitutional requirements.
-**Alternatives considered**:
-- Advanced security measures (increased complexity without clear requirement)
-- Client-side encryption (not necessary per feature spec)
-- Additional authentication factors (not specified in requirements)
+- Email/password provides core authentication functionality
+- Social login reduces friction for user onboarding
+- JWT-based session management for scalability
+- bcryptjs for password hashing (already in dependencies)
+  **Alternatives considered**:
+- Magic links: Less secure, requires email service integration
+- OAuth-only: Would exclude users without social accounts
+
+### Credit System
+
+**Decision**: Credit-based consumption with Stripe integration
+**Rationale**:
+
+- Clear cost structure: 5 credits for qwen, 10 for gemini
+- 100 free credits on registration to encourage trial
+- Stripe integration for payment processing (already in dependencies)
+- Credit transactions logged for audit purposes
+  **Alternatives considered**:
+- Subscription model: Less flexible for casual users
+- Pay-per-use: More complex billing integration
+
+### Image Storage
+
+**Decision**: AWS S3 with R2 integration
+**Rationale**:
+
+- Scalable storage for user-uploaded and generated images
+- 50MB file size limit as specified in requirements
+- Support for common image formats (JPEG, PNG, WebP, etc.)
+- Existing R2 integration in codebase
+  **Alternatives considered**:
+- Local filesystem: Not scalable for production
+- Cloudinary: Additional cost, overkill for current needs
+
+### Database Design
+
+**Decision**: Prisma ORM with SQLite (dev) / PostgreSQL (production)
+**Rationale**:
+
+- Prisma already integrated in project
+- Type-safe database access with TypeScript
+- SQLite for development simplicity
+- PostgreSQL for production scalability
+- Existing schema includes user, credit, and image models
+  **Alternatives considered**:
+- MongoDB: Less structured, not needed for current requirements
+- Supabase: Additional abstraction layer, not necessary
+
+### Performance Optimization
+
+**Decision**: Async processing with task queue
+**Rationale**:
+
+- AI model operations can be slow (60-second target)
+- Task queue prevents blocking user requests
+- Resource locking for concurrent operations
+- Redis for rate limiting and caching (already in dependencies)
+  **Alternatives considered**:
+- Synchronous processing: Would timeout for complex operations
+- Serverless functions: Less control over execution environment
+
+### Admin Interface
+
+**Decision**: Integrated admin dashboard within Next.js app
+**Rationale**:
+
+- Single codebase for maintenance
+- Role-based access control (already implemented)
+- Real-time analytics and user management
+- Article publishing system for content management
+  **Alternatives considered**:
+- Separate admin application: Additional complexity
+- Third-party admin tools: Less integrated with business logic
+
+### Testing Strategy
+
+**Decision**: Comprehensive testing with Jest and Testing Library
+**Rationale**:
+
+- Unit tests for services and utilities
+- Integration tests for API endpoints
+- Contract tests for AI model integrations
+- E2E tests for user workflows
+- Performance tests for scalability validation
+  **Alternatives considered**:
+- Minimal testing: Higher risk of production issues
+- External testing services: Additional cost and complexity
+
+### Security Considerations
+
+**Decision**: Multi-layered security approach
+**Rationale**:
+
+- HTTPS for all communications
+- JWT tokens with expiration
+- Input validation and sanitization
+- Content moderation with user confirmation
+- Audit logging for all operations
+  **Alternatives considered**:
+- Basic security only: Insufficient for user data protection
+- Over-engineered security: Unnecessary complexity for current scope
+
+## Technical Requirements Resolved
+
+### NEEDS CLARIFICATION: Database Choice
+
+**Resolved**: Prisma with SQLite (development) / PostgreSQL (production)
+
+- Existing Prisma integration in project
+- Type-safe database operations
+- Easy migration between environments
+
+### NEEDS CLARIFICATION: AI Model Integration Method
+
+**Resolved**: API-based integration with request/response handling
+
+- Models support REST API endpoints
+- Async processing for long-running operations
+- Error handling for failed requests
+
+### NEEDS CLARIFICATION: Payment Processing
+
+**Resolved**: Stripe integration (already in dependencies)
+
+- Secure payment processing
+- Credit purchase workflows
+- Transaction logging
+
+### NEEDS CLARIFICATION: Image Processing Pipeline
+
+**Resolved**: Upload → Validate → Process → Store → Log
+
+- Formidable for file uploads (already in dependencies)
+- AWS S3/R2 for storage
+- Database logging for audit trail
+
+## Integration Patterns
+
+### API Design
+
+- RESTful endpoints for all operations
+- Consistent error response format
+- Request/response validation with Zod
+- Rate limiting with Redis
+
+### Frontend Architecture
+
+- Next.js App Router for routing
+- Server components for static content
+- Client components for interactive features
+- Tailwind CSS for styling
+
+### Backend Services
+
+- Modular service architecture
+- Dependency injection pattern
+- Error boundaries and logging
+- Health checks and monitoring
 
 ## Performance Considerations
-**Rationale**: The system should meet 95% uptime targets with API responses under 2 seconds and image generation within 60 seconds for 95% of requests.
-**Alternatives considered**:
-- Higher performance targets (more expensive infrastructure)
-- Lower targets (degraded user experience)
-- Asynchronous processing (required anyway for AI model operations)
+
+### Response Time Targets
+
+- API endpoints: <2 seconds for 95% of requests
+- Image generation: <60 seconds for 95% of requests
+- Web pages: Core Web Vitals compliant
+
+### Scalability Requirements
+
+- 100+ concurrent users
+- Dynamic scaling based on demand
+- Database connection pooling
+- CDN for static assets
+
+### Resource Management
+
+- Credit-based usage control
+- Request timeout handling
+- Memory usage optimization
+- File size limits enforced
+
+## Risk Assessment
+
+### Technical Risks
+
+- **AI Model Availability**: Mitigation with fallback models
+- **Performance Degradation**: Mitigation with monitoring and scaling
+- **Data Loss**: Mitigation with backups and audit logging
+- **Security Breaches**: Mitigation with security best practices
+
+### Business Risks
+
+- **User Adoption**: Mitigation with free credits and intuitive UI
+- **Cost Management**: Mitigation with credit system and monitoring
+- **Content Moderation**: Mitigation with user confirmation system
+- **Payment Processing**: Mitigation with reliable Stripe integration
+
+## Conclusion
+
+All technical requirements have been clarified through research. The proposed architecture leverages existing dependencies and follows best practices for AI-powered web applications. The implementation plan addresses all functional requirements while maintaining scalability, security, and performance targets.
+
+**Next Steps**: Proceed to Phase 1 - Design & Contracts

@@ -35,7 +35,7 @@ export class CreditService {
           transactionType,
           amount,
           description,
-          aiModelUsed
+          relatedModelName: aiModelUsed
         }
       });
       
@@ -166,5 +166,13 @@ export class CreditService {
     });
 
     return user?.creditBalance || 0;
+  }
+
+  /**
+   * Checks if user has sufficient credits for an operation
+   */
+  async hasSufficientCredits(userId: string, requiredCredits: number): Promise<boolean> {
+    const userBalance = await this.getUserBalance(userId);
+    return userBalance >= requiredCredits;
   }
 }
