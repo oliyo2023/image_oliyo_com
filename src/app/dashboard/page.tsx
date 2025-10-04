@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface UserProfile {
   id: string;
@@ -17,12 +19,15 @@ export default function Dashboard() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('Common');
+  const td = useTranslations('Dashboard');
 
   useEffect(() => {
     // Check if user is authenticated
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/login');
+      router.push(`/${locale}/login`);
       return;
     }
 
@@ -38,7 +43,7 @@ export default function Dashboard() {
         if (!response.ok) {
           const errorData = await response.json();
           console.error('Error fetching user profile:', errorData.message);
-          router.push('/login'); // Redirect to login if token is invalid
+          router.push(`/${locale}/login`); // Redirect to login if token is invalid
           return;
         }
 
@@ -46,7 +51,7 @@ export default function Dashboard() {
         setUser(userData);
       } catch (error) {
         console.error('Error fetching user profile:', error);
-        router.push('/login');
+        router.push(`/${locale}/login`);
       } finally {
         setLoading(false);
       }
@@ -57,7 +62,7 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    router.push('/login');
+    router.push(`/${locale}/login`);
   };
 
   if (loading) {
@@ -71,7 +76,7 @@ export default function Dashboard() {
         justifyContent: 'center',
         fontFamily: 'Arial, sans-serif'
       }}>
-        <p>Loading...</p>
+        <p>{t('loading')}</p>
       </div>
     );
   }
@@ -80,36 +85,45 @@ export default function Dashboard() {
     return null;
   }
 
+  const buildHref = (path: string) => {
+    // 如果 path 已经包含当前 locale 前缀，则直接返回，避免出现 /zh/zh/...
+    const withLocalePrefix = `/${locale}/`;
+    if (path.startsWith(withLocalePrefix)) return path;
+    // 统一把无 locale 的 path 规范化为以斜杠开头
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+    return `/${locale}${normalized}`;
+  };
+
   const dashboardCards = [
     {
-      title: 'Credit Balance',
+      title: td('creditBalance'),
       value: user.creditBalance,
       description: 'Remaining credits in your account',
-      action: 'Purchase Credits',
+      action: td('purchaseCredits'),
       actionHref: '/dashboard/purchase-credits',
       color: '#2563eb'
     },
     {
-      title: 'Generate Images',
+      title: td('generateImage'),
       value: 'Create',
       description: 'Generate new images from text prompts',
-      action: 'Generate Image',
+      action: td('generateImage'),
       actionHref: '/dashboard/generate-image',
       color: '#10b981'
     },
     {
-      title: 'Edit Images',
+      title: td('editImage'),
       value: 'Modify',
       description: 'Edit existing images with text prompts',
-      action: 'Edit Image',
+      action: td('editImage'),
       actionHref: '/dashboard/edit-image',
       color: '#f59e0b'
     },
     {
-      title: 'View Gallery',
+      title: td('viewGallery'),
       value: 'Browse',
       description: 'View your generated and edited images',
-      action: 'View Gallery',
+      action: td('viewGallery'),
       actionHref: '/dashboard/gallery',
       color: '#8b5cf6'
     }
@@ -140,7 +154,7 @@ export default function Dashboard() {
             Oliyo AI Image Platform
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span>Welcome, {user.email}</span>
+            <span>{td('welcome', { email: user.email })}</span>
             <button 
               onClick={handleLogout}
               style={{ 
@@ -152,7 +166,7 @@ export default function Dashboard() {
                 cursor: 'pointer'
               }}
             >
-              Logout
+              {t('signOut')}
             </button>
           </div>
         </div>
@@ -173,7 +187,7 @@ export default function Dashboard() {
           padding: '2rem'
         }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
-            Dashboard
+            {t('dashboard')}
           </h2>
           
           <div style={{ 
@@ -197,7 +211,7 @@ export default function Dashboard() {
                   {card.title}
                 </h3>
                 <p style={{ 
-                  fontSize: card.title === 'Credit Balance' ? '2rem' : '1.5rem', 
+                  fontSize: typeof card.value === 'number' ? '2rem' : '1.5rem', 
                   fontWeight: 'bold', 
                   color: card.color, 
                   marginBottom: '0.5rem'
@@ -207,8 +221,8 @@ export default function Dashboard() {
                 <p style={{ color: '#4b5563', marginBottom: '1rem' }}>
                   {card.description}
                 </p>
-                <a
-                  href={card.actionHref}
+                <Link
+                  href={buildHref(card.actionHref)}
                   style={{ 
                     padding: '0.5rem 1rem',
                     backgroundColor: card.color,
@@ -220,7 +234,7 @@ export default function Dashboard() {
                   }}
                 >
                   {card.action}
-                </a>
+                </Link>
               </div>
             ))}
           </div>
@@ -233,7 +247,7 @@ export default function Dashboard() {
             border: '1px solid #bae6fd'
           }}>
             <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
-              Recent Activity
+              {td('recentActivity')}
             </h3>
             <div style={{ 
               backgroundColor: 'white',
@@ -242,7 +256,7 @@ export default function Dashboard() {
               border: '1px solid #e5e7eb'
             }}>
               <p style={{ color: '#4b5563', textAlign: 'center' }}>
-                No recent activity yet. Try generating or editing an image!
+                {td('noRecentActivity')}
               </p>
             </div>
           </div>
@@ -265,11 +279,11 @@ export default function Dashboard() {
           gap: '1rem'
         }}>
           <div style={{ display: 'flex', gap: '2rem' }}>
-            <a href="/" style={{ color: '#6b7280', textDecoration: 'none' }}>Home</a>
-            <a href="/about" style={{ color: '#6b7280', textDecoration: 'none' }}>About</a>
-            <a href="/pricing" style={{ color: '#6b7280', textDecoration: 'none' }}>Pricing</a>
-            <a href="/faq" style={{ color: '#6b7280', textDecoration: 'none' }}>FAQ</a>
-            <a href="/contact" style={{ color: '#6b7280', textDecoration: 'none' }}>Contact</a>
+            <Link href={`/${locale}/`} style={{ color: '#6b7280', textDecoration: 'none' }}>{t('home')}</Link>
+            <Link href={`/${locale}/about`} style={{ color: '#6b7280', textDecoration: 'none' }}>{t('about')}</Link>
+            <Link href={`/${locale}/pricing`} style={{ color: '#6b7280', textDecoration: 'none' }}>{t('pricing')}</Link>
+            <Link href={`/${locale}/faq`} style={{ color: '#6b7280', textDecoration: 'none' }}>{t('faq')}</Link>
+            <Link href={`/${locale}/contact`} style={{ color: '#6b7280', textDecoration: 'none' }}>{t('contact')}</Link>
           </div>
           <p style={{ color: '#4b5563' }}>
             © {new Date().getFullYear()} Oliyo AI Image Platform. All rights reserved.

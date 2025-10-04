@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface UserProfile {
   id: string;
@@ -14,42 +15,40 @@ interface UserProfile {
 }
 
 export default function PurchaseCredits() {
-  const [selectedPackage, setSelectedPackage] = useState('100');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [user, setUser] = useState<UserProfile | null>(null);
+
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('PurchaseCredits');
+  const tc = useTranslations('Common');
 
   useEffect(() => {
-    // Check if user is authenticated
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/login');
+      router.push(`/${locale}/login`);
       return;
     }
 
-    // Fetch user profile
     fetch('/api/auth/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.id) {
-        setUser(data);
-      } else {
-        // Invalid token, redirect to login
+      .then(res => res.json())
+      .then(data => {
+        if (data.id) {
+          setUser(data);
+        } else {
+          localStorage.removeItem('token');
+          router.push(`/${locale}/login`);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching user profile:', error);
         localStorage.removeItem('token');
-        router.push('/login');
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching user profile:', error);
-      localStorage.removeItem('token');
-      router.push('/login');
-    });
-  }, [router]);
+        router.push(`/${locale}/login`);
+      });
+  }, [router, locale]);
 
   const creditPackages = [
     { credits: 100, price: 9.99, description: 'Starter Pack' },
@@ -57,14 +56,13 @@ export default function PurchaseCredits() {
     { credits: 1000, price: 89.99, description: 'Best Value' }
   ];
 
-  const handlePurchase = async (credits, price) => {
+  const handlePurchase = async (credits: number, price: number) => {
     setLoading(true);
     setMessage('');
 
     try {
       const token = localStorage.getItem('token');
-      
-      // Create payment intent
+
       const response = await fetch('/api/credits/purchase-intent', {
         method: 'POST',
         headers: {
@@ -73,36 +71,29 @@ export default function PurchaseCredits() {
         },
         body: JSON.stringify({
           credits,
-          paymentMethodId: 'pm_card_visa' // This would be replaced with actual payment method
+          paymentMethodId: 'pm_card_visa'
         })
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(`Payment intent created successfully. Redirecting to payment...`);
-        // In a real implementation, you would redirect to a payment page
-        // For now, we'll simulate a successful payment
+        setMessage(t('messages.intentCreated'));
         setTimeout(() => {
-          setMessage('Payment successful! Credits will be added to your account shortly.');
-          // Refresh user data to show updated credit balance
+          setMessage(t('messages.success'));
           fetch('/api/auth/profile', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
           })
-          .then(res => res.json())
-          .then(userData => {
-            if (userData.id) {
-              setUser(userData);
-            }
-          });
+            .then(res => res.json())
+            .then(userData => {
+              if (userData.id) setUser(userData);
+            });
         }, 2000);
       } else {
-        setMessage(data.message || 'Failed to create payment intent');
+        setMessage(data.message || t('messages.failed'));
       }
     } catch (error) {
-      setMessage('An error occurred while processing your payment');
+      setMessage(t('messages.error'));
       console.error('Error processing payment:', error);
     } finally {
       setLoading(false);
@@ -110,52 +101,52 @@ export default function PurchaseCredits() {
   };
 
   const handleBack = () => {
-    router.push('/dashboard');
+    router.push(`/${locale}/dashboard`);
   };
 
   if (!user) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        backgroundColor: '#f3f4f6', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#f3f4f6',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
         fontFamily: 'Arial, sans-serif'
       }}>
-        <p>Loading...</p>
+        <p>{tc('loading')}</p>
       </div>
     );
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f3f4f6', 
-      display: 'flex', 
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#f3f4f6',
+      display: 'flex',
       flexDirection: 'column',
       fontFamily: 'Arial, sans-serif'
     }}>
       {/* Header */}
-      <header style={{ 
+      <header style={{
         backgroundColor: 'white',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
         padding: '1rem 2rem'
       }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           maxWidth: '1200px',
           margin: '0 auto'
         }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>
-            Purchase Credits
+            {t('title')}
           </h1>
-          <button 
+          <button
             onClick={handleBack}
-            style={{ 
+            style={{
               padding: '0.5rem 1rem',
               backgroundColor: '#6b7280',
               color: 'white',
@@ -164,39 +155,39 @@ export default function PurchaseCredits() {
               cursor: 'pointer'
             }}
           >
-            Back to Dashboard
+            {t('backToDashboard')}
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main style={{ 
+      <main style={{
         flex: 1,
         maxWidth: '1200px',
         width: '100%',
         margin: '2rem auto',
         padding: '0 1rem'
       }}>
-        <div style={{ 
+        <div style={{
           backgroundColor: 'white',
           borderRadius: '0.5rem',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
           padding: '2rem'
         }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
-            Buy More Credits
+            {t('buyMoreCredits')}
           </h2>
-          
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: '2rem',
             marginTop: '2rem'
           }}>
             {creditPackages.map((pkg) => (
-              <div 
+              <div
                 key={pkg.credits}
-                style={{ 
+                style={{
                   backgroundColor: pkg.credits === 500 ? '#eff6ff' : '#f9fafb',
                   border: pkg.credits === 500 ? '2px solid #2563eb' : '1px solid #d1d5db',
                   borderRadius: '0.5rem',
@@ -207,47 +198,47 @@ export default function PurchaseCredits() {
                 }}
               >
                 {pkg.credits === 500 && (
-                  <div style={{ 
-                    position: 'absolute', 
-                    top: '-0.5rem', 
-                    right: '-0.5rem', 
-                    backgroundColor: '#2563eb', 
-                    color: 'white', 
-                    padding: '0.25rem 0.5rem', 
-                    borderRadius: '0.25rem', 
-                    fontSize: '0.75rem', 
+                  <div style={{
+                    position: 'absolute',
+                    top: '-0.5rem',
+                    right: '-0.5rem',
+                    backgroundColor: '#2563eb',
+                    color: 'white',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.25rem',
+                    fontSize: '0.75rem',
                     fontWeight: 'bold'
                   }}>
-                    Best Value
+                    {t('bestValueBadge')}
                   </div>
                 )}
-                
+
                 <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', textAlign: 'center' }}>
-                  {pkg.credits} Credits
+                  {pkg.credits} {t('credits')}
                 </h3>
-                <p style={{ 
-                  fontSize: '1.25rem', 
-                  fontWeight: 'bold', 
-                  color: '#2563eb', 
-                  textAlign: 'center', 
-                  margin: '0.5rem 0' 
+                <p style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 'bold',
+                  color: '#2563eb',
+                  textAlign: 'center',
+                  margin: '0.5rem 0'
                 }}>
                   ${pkg.price.toFixed(2)}
                 </p>
-                <p style={{ 
-                  color: '#6b7280', 
-                  textAlign: 'center', 
-                  marginBottom: '1rem' 
+                <p style={{
+                  color: '#6b7280',
+                  textAlign: 'center',
+                  marginBottom: '1rem'
                 }}>
                   {pkg.description}
                 </p>
-                <p style={{ 
-                  color: '#10b981', 
-                  textAlign: 'center', 
-                  fontWeight: 'bold', 
-                  marginBottom: '1rem' 
+                <p style={{
+                  color: '#10b981',
+                  textAlign: 'center',
+                  fontWeight: 'bold',
+                  marginBottom: '1rem'
                 }}>
-                  ${(pkg.price / pkg.credits * 100).toFixed(2)} per credit
+                  ${(pkg.price / pkg.credits * 100).toFixed(2)} {t('perCredit')}
                 </p>
                 <button
                   onClick={() => handlePurchase(pkg.credits, pkg.price)}
@@ -264,19 +255,19 @@ export default function PurchaseCredits() {
                     opacity: loading ? 0.7 : 1
                   }}
                 >
-                  {loading ? 'Processing...' : 'Buy Now'}
+                  {loading ? t('processing') : t('buyNow')}
                 </button>
               </div>
             ))}
           </div>
 
           {message && (
-            <div 
-              style={{ 
-                marginTop: '2rem', 
-                padding: '1rem', 
-                backgroundColor: message.includes('successful') ? '#d1fae5' : '#fee2e2', 
-                color: message.includes('successful') ? '#065f46' : '#991b1b', 
+            <div
+              style={{
+                marginTop: '2rem',
+                padding: '1rem',
+                backgroundColor: message.includes('successful') || message.includes('成功') ? '#d1fae5' : '#fee2e2',
+                color: message.includes('successful') || message.includes('成功') ? '#065f46' : '#991b1b',
                 borderRadius: '0.25rem',
                 textAlign: 'center'
               }}
@@ -285,18 +276,18 @@ export default function PurchaseCredits() {
             </div>
           )}
 
-          <div style={{ 
-            marginTop: '2rem', 
-            padding: '1rem', 
-            backgroundColor: '#f3f4f6', 
+          <div style={{
+            marginTop: '2rem',
+            padding: '1rem',
+            backgroundColor: '#f3f4f6',
             borderRadius: '0.5rem',
             textAlign: 'center'
           }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.5rem' }}>
-              Current Balance
+              {t('currentBalance')}
             </h3>
             <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2563eb' }}>
-              {user.creditBalance} credits
+              {user.creditBalance} {t('credits')}
             </p>
           </div>
         </div>

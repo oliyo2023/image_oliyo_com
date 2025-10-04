@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import UserAvatar from './UserAvatar';
 
 interface NavigationProps {
@@ -12,13 +13,14 @@ interface NavigationProps {
 
 export default function Navigation({ user, onLogout }: NavigationProps) {
   const pathname = usePathname();
+  const locale = useLocale();
   
   const navItems = [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Generate Image', href: '/dashboard/generate-image' },
-    { name: 'Edit Image', href: '/dashboard/edit-image' },
-    { name: 'Gallery', href: '/dashboard/gallery' },
-    { name: 'Purchase Credits', href: '/dashboard/purchase-credits' }
+    { name: 'Dashboard', href: `/${locale}/dashboard` },
+    { name: 'Generate Image', href: `/${locale}/dashboard/generate-image` },
+    { name: 'Edit Image', href: `/${locale}/dashboard/edit-image` },
+    { name: 'Gallery', href: `/${locale}/dashboard/gallery` },
+    { name: 'Purchase Credits', href: `/${locale}/dashboard/purchase-credits` }
   ];
 
   return (
@@ -34,7 +36,7 @@ export default function Navigation({ user, onLogout }: NavigationProps) {
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
-        <Link href="/dashboard" style={{ 
+        <Link href={`/${locale}/dashboard`} style={{ 
           fontSize: '1.5rem', 
           fontWeight: 'bold', 
           color: '#1f2937', 

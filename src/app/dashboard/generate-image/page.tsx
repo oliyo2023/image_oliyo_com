@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface UserProfile {
   id: string;
@@ -22,40 +23,39 @@ export default function GenerateImage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [user, setUser] = useState<UserProfile | null>(null);
+
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('GenerateImage');
+  const tc = useTranslations('Common');
 
   useEffect(() => {
-    // Check if user is authenticated
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/login');
+      router.push(`/${locale}/login`);
       return;
     }
 
-    // Fetch user profile
     fetch('/api/auth/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.id) {
-        setUser(data);
-      } else {
-        // Invalid token, redirect to login
+      .then(res => res.json())
+      .then(data => {
+        if (data.id) {
+          setUser(data);
+        } else {
+          localStorage.removeItem('token');
+          router.push(`/${locale}/login`);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching user profile:', error);
         localStorage.removeItem('token');
-        router.push('/login');
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching user profile:', error);
-      localStorage.removeItem('token');
-      router.push('/login');
-    });
-  }, [router]);
+        router.push(`/${locale}/login`);
+      });
+  }, [router, locale]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
@@ -80,14 +80,13 @@ export default function GenerateImage() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage('Image generation initiated! Check back later to view your generated image.');
-        // Reset form
+        setMessage(t('messages.initiated'));
         setPrompt('');
       } else {
-        setMessage(data.message || 'Failed to generate image');
+        setMessage(data.message || t('messages.failed'));
       }
     } catch (error) {
-      setMessage('An error occurred while generating the image');
+      setMessage(t('messages.error'));
       console.error('Error generating image:', error);
     } finally {
       setLoading(false);
@@ -95,52 +94,52 @@ export default function GenerateImage() {
   };
 
   const handleBack = () => {
-    router.push('/dashboard');
+    router.push(`/${locale}/dashboard`);
   };
 
   if (!user) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        backgroundColor: '#f3f4f6', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#f3f4f6',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
         fontFamily: 'Arial, sans-serif'
       }}>
-        <p>Loading...</p>
+        <p>{tc('loading')}</p>
       </div>
     );
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f3f4f6', 
-      display: 'flex', 
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#f3f4f6',
+      display: 'flex',
       flexDirection: 'column',
       fontFamily: 'Arial, sans-serif'
     }}>
       {/* Header */}
-      <header style={{ 
+      <header style={{
         backgroundColor: 'white',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
         padding: '1rem 2rem'
       }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           maxWidth: '1200px',
           margin: '0 auto'
         }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>
-            Generate Image
+            {t('title')}
           </h1>
-          <button 
+          <button
             onClick={handleBack}
-            style={{ 
+            style={{
               padding: '0.5rem 1rem',
               backgroundColor: '#6b7280',
               color: 'white',
@@ -149,32 +148,32 @@ export default function GenerateImage() {
               cursor: 'pointer'
             }}
           >
-            Back to Dashboard
+            {t('backToDashboard')}
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main style={{ 
+      <main style={{
         flex: 1,
         maxWidth: '1200px',
         width: '100%',
         margin: '2rem auto',
         padding: '0 1rem'
       }}>
-        <div style={{ 
+        <div style={{
           backgroundColor: 'white',
           borderRadius: '0.5rem',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
           padding: '2rem'
         }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
-            Create New Image
+            {t('createNewImage')}
           </h2>
-          
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr 1fr', 
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
             gap: '2rem',
             marginTop: '2rem'
           }}>
@@ -183,7 +182,7 @@ export default function GenerateImage() {
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: '1rem' }}>
                   <label htmlFor="prompt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    Prompt
+                    {t('promptLabel')}
                   </label>
                   <textarea
                     id="prompt"
@@ -198,13 +197,13 @@ export default function GenerateImage() {
                       borderRadius: '0.25rem',
                       boxSizing: 'border-box'
                     }}
-                    placeholder="Describe the image you want to generate..."
+                    placeholder={t('promptPlaceholder')}
                   />
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>
                   <label htmlFor="model" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    AI Model
+                    {t('aiModel')}
                   </label>
                   <select
                     id="model"
@@ -218,23 +217,23 @@ export default function GenerateImage() {
                       boxSizing: 'border-box'
                     }}
                   >
-                    <option value="qwen-image-edit">Qwen Image Edit (5 credits)</option>
-                    <option value="gemini-flash-image">Gemini Flash Image (3 credits)</option>
+                    <option value="qwen-image-edit">Qwen Image Edit (5 {t('credits')})</option>
+                    <option value="gemini-flash-image">Gemini Flash Image (3 {t('credits')})</option>
                   </select>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                   <div>
                     <label htmlFor="width" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                      Width
+                      {t('width')}
                     </label>
                     <input
                       type="number"
                       id="width"
                       value={width}
                       onChange={(e) => setWidth(parseInt(e.target.value))}
-                      min="64"
-                      max="2048"
+                      min={64}
+                      max={2048}
                       style={{
                         width: '100%',
                         padding: '0.5rem',
@@ -247,15 +246,15 @@ export default function GenerateImage() {
 
                   <div>
                     <label htmlFor="height" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                      Height
+                      {t('height')}
                     </label>
                     <input
                       type="number"
                       id="height"
                       value={height}
                       onChange={(e) => setHeight(parseInt(e.target.value))}
-                      min="64"
-                      max="2048"
+                      min={64}
+                      max={2048}
                       style={{
                         width: '100%',
                         padding: '0.5rem',
@@ -269,7 +268,7 @@ export default function GenerateImage() {
 
                 <div style={{ marginBottom: '1rem' }}>
                   <label htmlFor="style" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    Style
+                    {t('style')}
                   </label>
                   <select
                     id="style"
@@ -283,29 +282,29 @@ export default function GenerateImage() {
                       boxSizing: 'border-box'
                     }}
                   >
-                    <option value="realistic">Realistic</option>
-                    <option value="anime">Anime</option>
-                    <option value="cartoon">Cartoon</option>
-                    <option value="painting">Painting</option>
-                    <option value="digital-art">Digital Art</option>
+                    <option value="realistic">{t('styles.realistic')}</option>
+                    <option value="anime">{t('styles.anime')}</option>
+                    <option value="cartoon">{t('styles.cartoon')}</option>
+                    <option value="painting">{t('styles.painting')}</option>
+                    <option value="digital-art">{t('styles.digitalArt')}</option>
                   </select>
                 </div>
 
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
                   marginTop: '2rem'
                 }}>
                   <div>
-                    <span style={{ fontWeight: 'bold' }}>Cost:</span> 
+                    <span style={{ fontWeight: 'bold' }}>{t('cost')}:</span>
                     <span style={{ marginLeft: '0.5rem' }}>
-                      {selectedModel === 'qwen-image-edit' ? '5' : '3'} credits
+                      {selectedModel === 'qwen-image-edit' ? '5' : '3'} {t('credits')}
                     </span>
                   </div>
                   <div>
-                    <span style={{ fontWeight: 'bold' }}>Balance:</span> 
-                    <span style={{ marginLeft: '0.5rem' }}>{user.creditBalance} credits</span>
+                    <span style={{ fontWeight: 'bold' }}>{t('balance')}:</span>
+                    <span style={{ marginLeft: '0.5rem' }}>{user.creditBalance} {t('credits')}</span>
                   </div>
                 </div>
 
@@ -325,17 +324,17 @@ export default function GenerateImage() {
                     opacity: loading ? 0.7 : 1
                   }}
                 >
-                  {loading ? 'Generating...' : 'Generate Image'}
+                  {loading ? t('generating') : t('generate')}
                 </button>
               </form>
 
               {message && (
-                <div 
-                  style={{ 
-                    marginTop: '1rem', 
-                    padding: '0.75rem', 
-                    backgroundColor: message.includes('initiated') ? '#d1fae5' : '#fee2e2', 
-                    color: message.includes('initiated') ? '#065f46' : '#991b1b', 
+                <div
+                  style={{
+                    marginTop: '1rem',
+                    padding: '0.75rem',
+                    backgroundColor: message.includes('initiated') || message.includes('开始') ? '#d1fae5' : '#fee2e2',
+                    color: message.includes('initiated') || message.includes('开始') ? '#065f46' : '#991b1b',
                     borderRadius: '0.25rem',
                     textAlign: 'center'
                   }}
@@ -348,9 +347,9 @@ export default function GenerateImage() {
             {/* Preview */}
             <div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
-                Preview
+                {t('previewTitle')}
               </h3>
-              <div style={{ 
+              <div style={{
                 backgroundColor: '#f3f4f6',
                 borderRadius: '0.5rem',
                 height: '400px',
@@ -360,13 +359,12 @@ export default function GenerateImage() {
                 border: '2px dashed #d1d5db'
               }}>
                 <p style={{ color: '#6b7280' }}>
-                  {prompt ? 'Preview will appear here' : 'Enter a prompt to see preview'}
+                  {prompt ? t('previewWillAppear') : t('enterPromptToSeePreview')}
                 </p>
               </div>
               <div style={{ marginTop: '1rem' }}>
                 <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                  <strong>Tip:</strong> Be descriptive with your prompts for better results. 
-                  For example: "A beautiful landscape with mountains and a lake at sunset, realistic style"
+                  <strong>{t('tipTitle')}</strong> {t('tipText')}
                 </p>
               </div>
             </div>

@@ -1,71 +1,107 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useLocale } from 'next-intl';
-import { useState } from 'react';
+import { Globe } from 'lucide-react';
 
-const languages = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
+interface Language {
+  code: string;
+  name: string;
+  flag: string;
+}
+
+const languages: Language[] = [
   { code: 'zh', name: '中文', flag: '🇨🇳' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' },
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'ja', name: '日本語', flag: '🇯🇵' }
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
 ];
 
 export default function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
-  const locale = useLocale();
+  const [currentLocale, setCurrentLocale] = useState('zh');
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleLanguageChange = (newLocale: string) => {
-    // 获取当前路径并替换语言部分
-    const currentPath = pathname ? pathname.split('/').slice(2).join('/') : '';
-    const newPath = `/${newLocale}/${currentPath}`;
+  useEffect(() => {
+    // 从路径中获取当前语言
+    const pathSegments = pathname.split('/');
+    const localeFromPath = pathSegments[1];
+    if (languages.find(lang => lang.code === localeFromPath)) {
+      setCurrentLocale(localeFromPath);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLanguageChange = (langCode: string) => {
+    const pathSegments = pathname.split('/');
+    pathSegments[1] = langCode;
+    const newPath = pathSegments.join('/');
     router.push(newPath);
     setIsOpen(false);
   };
 
-  const currentLanguage = languages.find(lang => lang.code === locale) || languages[0];
+  const getCurrentLanguage = () => {
+    return languages.find(lang => lang.code === currentLocale) || languages[0];
+  };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
+      {/* 触发按钮 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-200 text-white hover:scale-105"
       >
-        <span>{currentLanguage.flag}</span>
-        <span>{currentLanguage.name}</span>
+        <Globe className="w-4 h-4" />
+        <span className="text-lg">{getCurrentLanguage().flag}</span>
+        <span className="hidden sm:inline text-sm font-medium">
+          {getCurrentLanguage().name}
+        </span>
         <svg
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
+      {/* 下拉菜单 */}
       {isOpen && (
-        <div className="absolute right-0 z-10 w-48 mt-2 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg">
-          <div className="py-1">
-            {languages.map((language) => (
-              <button
-                key={language.code}
-                onClick={() => handleLanguageChange(language.code)}
-                className={`flex items-center w-full px-4 py-2 text-sm text-left ${
-                  language.code === locale
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <span className="mr-2">{language.flag}</span>
-                <span>{language.name}</span>
-              </button>
-            ))}
-          </div>
+        <div className="absolute top-full right-0 mt-2 py-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 z-50 animate-in slide-in-from-top-2 duration-200">
+          {languages.map((language) => (
+            <button
+              key={language.code}
+              onClick={() => handleLanguageChange(language.code)}
+              className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 ${
+                currentLocale === language.code 
+                  ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-500' 
+                  : 'text-gray-700'
+              }`}
+            >
+              <span className="text-xl">{language.flag}</span>
+              <span className="font-medium">{language.name}</span>
+              {currentLocale === language.code && (
+                <svg className="w-4 h-4 ml-auto text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </button>
+          ))}
         </div>
       )}
     </div>

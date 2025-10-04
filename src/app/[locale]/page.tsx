@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import NavigationCard from '../NavigationCard';
-import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+import LanguageSelector from '@/components/shared/LanguageSelector';
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -41,25 +41,16 @@ export default function Home() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
-    router.push('/');
+    const locale = useLocale();
+    router.push(`/${locale}`);
   };
 
-  // Get current locale from URL
-  const getLocaleFromPath = () => {
-    if (typeof window !== 'undefined') {
-      const path = window.location.pathname;
-      const segments = path.split('/');
-      return segments[1]; // The locale should be the first segment
-    }
-    return 'en'; // Default locale
-  };
+  // 当前语言
+  const locale = useLocale();
 
-  const currentLocale = getLocaleFromPath();
-
-  // Function to create localized links
+  // 生成带语言前缀的链接
   const createLocalizedLink = (path: string) => {
-    if (path === '/') return `/${currentLocale}`;
-    return `/${currentLocale}${path}`;
+    return path === '/' ? `/${locale}` : `/${locale}${path}`;
   };
 
   return (
@@ -87,7 +78,7 @@ export default function Home() {
             {t('title')}
           </h1>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <LanguageSwitcher />
+            <LanguageSelector />
             {loading ? (
               <span>{tCommon('loading')}</span>
             ) : isLoggedIn ? (
@@ -226,7 +217,7 @@ export default function Home() {
             </p>
             {isLoggedIn ? (
               <a 
-                href="/dashboard"
+                href={createLocalizedLink("/dashboard")}
                 style={{ 
                   padding: '0.5rem 1rem',
                   backgroundColor: '#2563eb',
@@ -240,7 +231,7 @@ export default function Home() {
               </a>
             ) : (
               <a 
-                href="/register"
+                href={createLocalizedLink("/register")}
                 style={{ 
                   padding: '0.5rem 1rem',
                   backgroundColor: '#2563eb',
@@ -269,7 +260,7 @@ export default function Home() {
             </p>
             {isLoggedIn ? (
               <a 
-                href="/dashboard"
+                href={createLocalizedLink("/dashboard")}
                 style={{ 
                   padding: '0.5rem 1rem',
                   backgroundColor: '#10b981',
@@ -283,7 +274,7 @@ export default function Home() {
               </a>
             ) : (
               <a 
-                href="/register"
+                href={createLocalizedLink("/register")}
                 style={{ 
                   padding: '0.5rem 1rem',
                   backgroundColor: '#10b981',
@@ -311,7 +302,7 @@ export default function Home() {
               {t('creditBasedSystemDesc')}
             </p>
             <a 
-              href="/pricing"
+              href={createLocalizedLink("/pricing")}
               style={{ 
                 padding: '0.5rem 1rem',
                 backgroundColor: '#f59e0b',
@@ -343,11 +334,11 @@ export default function Home() {
           gap: '1rem'
         }}>
           <div style={{ display: 'flex', gap: '2rem' }}>
-            <a href="/" style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('home')}</a>
-            <a href="/about" style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('about')}</a>
-            <a href="/pricing" style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('pricing')}</a>
-            <a href="/faq" style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('faq')}</a>
-            <a href="/contact" style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('contact')}</a>
+            <a href={createLocalizedLink('/')} style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('home')}</a>
+            <a href={createLocalizedLink('/about')} style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('about')}</a>
+            <a href={createLocalizedLink('/pricing')} style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('pricing')}</a>
+            <a href={createLocalizedLink('/faq')} style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('faq')}</a>
+            <a href={createLocalizedLink('/contact')} style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('contact')}</a>
           </div>
           <p style={{ color: '#4b5563' }}>
             © {new Date().getFullYear()} {t('title')}. {t('allRightsReserved')}

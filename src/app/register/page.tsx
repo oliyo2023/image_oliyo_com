@@ -2,181 +2,76 @@
 'use client';
 
 import { useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 
-export default function RegisterPage() {
+export default function Register() {
+  const locale = useLocale();
+  const t = useTranslations('Auth');
+  const tc = useTranslations('Common');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [confirm, setConfirm] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage('');
-
-    // Basic validation
-    if (password !== confirmPassword) {
-      setMessage('Passwords do not match');
-      setLoading(false);
+    if (!email || !password || !confirm) {
+      setMessage(t('errors.allFieldsRequired'));
       return;
     }
+    if (password !== confirm) {
+      setMessage(t('errors.passwordsDoNotMatch'));
+      return;
+    }
+    setLoading(true);
+    setMessage('');
 
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, confirmPassword }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       });
-
       const data = await response.json();
-
       if (response.ok) {
-        // Store the token in localStorage
         localStorage.setItem('token', data.token);
-        setMessage('Registration successful! Redirecting to dashboard...');
-        // Redirect to dashboard
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1500);
+        window.location.href = `/${locale}/dashboard`;
       } else {
-        setMessage(data.message || 'Registration failed');
+        setMessage(data.message || t('errors.registrationFailed'));
       }
-    } catch (error) {
-      setMessage('An error occurred during registration');
+    } catch {
+      setMessage(t('errors.registrationFailed'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f3f4f6', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      fontFamily: 'Arial, sans-serif'
-    }}>
-      <main style={{ 
-        backgroundColor: 'white',
-        padding: '2rem',
-        borderRadius: '0.5rem',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        width: '100%',
-        maxWidth: '400px'
-      }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1f2937', textAlign: 'center' }}>
-          Register
-        </h1>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'Arial, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '420px', backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '1rem' }}>{tc('register')}</h1>
 
-        <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem' }}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.25rem',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
+        <label style={{ display: 'block', marginBottom: '0.25rem' }}>{t('email')}</label>
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('placeholders.email')} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }} />
 
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.25rem',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
+        <label style={{ display: 'block', marginTop: '0.75rem', marginBottom: '0.25rem' }}>{t('password')}</label>
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('placeholders.password')} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }} />
 
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.25rem',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
+        <label style={{ display: 'block', marginTop: '0.75rem', marginBottom: '0.25rem' }}>{t('confirmPassword')}</label>
+        <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder={t('placeholders.confirmPassword')} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }} />
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              fontWeight: 'bold',
-              borderRadius: '0.25rem',
-              border: 'none',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1
-            }}
-          >
-            {loading ? 'Registering...' : 'Register'}
-          </button>
-        </form>
+        <button type="submit" disabled={loading} style={{ width: '100%', marginTop: '1rem', padding: '0.75rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>
+          {loading ? t('registering') : tc('register')}
+        </button>
 
-        {message && (
-          <div 
-            style={{ 
-              marginTop: '1rem', 
-              padding: '0.75rem', 
-              backgroundColor: message.includes('successful') ? '#d1fae5' : '#fee2e2', 
-              color: message.includes('successful') ? '#065f46' : '#991b1b', 
-              borderRadius: '0.25rem',
-              textAlign: 'center'
-            }}
-          >
-            {message}
-          </div>
-        )}
+        {message && <p style={{ color: '#991b1b', marginTop: '0.75rem' }}>{message}</p>}
 
-        <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-          <p>
-            Already have an account?{' '}
-            <a href="/login" style={{ color: '#2563eb', textDecoration: 'underline' }}>
-              Login here
-            </a>
-          </p>
+        <div style={{ marginTop: '0.75rem' }}>
+          <a href={`/${locale}/login`} style={{ color: '#2563eb', textDecoration: 'underline' }}>{t('alreadyHaveAccount')} {tc('login')}</a>
         </div>
-      </main>
+      </form>
     </div>
   );
 }

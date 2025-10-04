@@ -41,7 +41,7 @@
     "contact": "Get in touch with us",
     "blog": "Latest articles and updates",
     "docs": "API documentation",
-    "admin": "Administrative dashboard"
+    "admin": "Admin dashboard"
   },
   "Auth": {
     "login": "Login",
@@ -51,7 +51,7 @@
     "confirmPassword": "Confirm Password",
     "loggingIn": "Logging in...",
     "registering": "Registering...",
-    "forgotPassword": "Forgot Password?",
+    "forgotPassword": "Forgot password?",
     "noAccount": "Don't have an account?",
     "alreadyHaveAccount": "Already have an account?",
     "termsAgreement": "By registering, you agree to our <a href=\"/terms\">Terms of Service</a> and <a href=\"/privacy\">Privacy Policy</a>.",
@@ -61,14 +61,35 @@
       "confirmPassword": "Confirm your password"
     },
     "errors": {
-      "emailAndPasswordRequired": "Please enter both email and password",
+      "emailAndPasswordRequired": "Please enter email and password",
       "allFieldsRequired": "Please fill in all fields",
       "passwordsDoNotMatch": "Passwords do not match",
       "invalidEmail": "Please enter a valid email address",
-      "passwordTooShort": "Password must be at least 6 characters long",
+      "passwordTooShort": "Password must be at least 6 characters",
       "loginFailed": "Login failed. Please check your credentials and try again.",
       "registrationFailed": "Registration failed. Please try again."
     }
+  },
+  "About": {
+    "title": "About Us",
+    "visionTitle": "Our Vision",
+    "visionP1": "At Oliyo AI Image Platform, we believe that everyone deserves to bring their creative visions to life. Our mission is to democratize access to powerful AI image generation and editing tools, making professional-level creative resources available to individuals, artists, designers, and businesses of all sizes.",
+    "visionP2": "We're building a platform where imagination meets technology, enabling users to transform simple text prompts into stunning visuals in seconds.",
+    "techTitle": "Our Technology",
+    "techP1": "We leverage cutting-edge artificial intelligence models including qwen-image-edit and gemini-flash-image to provide unparalleled image generation and editing capabilities. Our platform is built with performance, security, and ease of use in mind.",
+    "techP2": "Our cloud-based infrastructure ensures fast processing times and scalable performance to handle your creative demands, whether you're generating a single image or bulk processing hundreds.",
+    "howTitle": "How It Works",
+    "step1Title": "Sign Up",
+    "step1P": "Create your account and receive 100 free credits to get started.",
+    "step2Title": "Describe Your Vision",
+    "step2P": "Enter a text prompt describing the image you want to create or edit.",
+    "step3Title": "Generate or Edit",
+    "step3P": "Our AI models create or modify your image based on your prompt.",
+    "step4Title": "Enjoy Your Creations",
+    "step4P": "Download, share, or continue editing your generated images.",
+    "ctaTitle": "Ready to Start Creating?",
+    "ctaP": "Join thousands of creators who are bringing their ideas to life with our AI-powered platform.",
+    "ctaButton": "Get Started Now - 100 Free Credits"
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -85,18 +106,18 @@
     "manageProfile": "Manage Profile",
     "adminPanel": "Admin Panel",
     "noRecentActivity": "No recent activity",
-    "credits": "credits",
-    "images": "images"
+    "credits": "Credits",
+    "images": "Images"
   },
   "Pricing": {
-    "title": "Simple, Transparent Pricing",
-    "description": "Choose a plan that works for you. All plans include access to our full suite of AI models.",
+    "title": "Simple, transparent pricing",
+    "description": "Choose the plan that fits your needs. All plans include access to our full suite of AI models.",
     "starter": "Starter",
     "pro": "Pro",
     "enterprise": "Enterprise",
     "credits": "Credits",
     "perMonth": "per month",
-    "oneTime": "One-time",
+    "oneTime": "one-time",
     "selectPlan": "Select Plan",
     "currentPlan": "Current Plan",
     "perfectFor": "Perfect for",
@@ -109,9 +130,58 @@
     "prioritySupport": "Priority support",
     "customIntegration": "Custom integration",
     "unlimited": "Unlimited",
-    "access": "access"
+    "access": "Access"
+  },
+  "GenerateImage": { "title": "Generate Image", "backToDashboard": "Back to Dashboard", "createNewImage": "Create New Image", "promptLabel": "Prompt", "promptPlaceholder": "Describe the image you want to generate...", "aiModel": "AI Model", "style": "Style", "width": "Width", "height": "Height", "styles": { "realistic": "Realistic", "anime": "Anime", "cartoon": "Cartoon", "painting": "Painting", "digitalArt": "Digital Art" }, "cost": "Cost", "balance": "Balance", "credits": "credits", "generate": "Generate Image", "generating": "Generating...", "loading": "Loading...", "previewTitle": "Preview", "previewWillAppear": "Preview will appear here", "enterPromptToSeePreview": "Enter a prompt to see preview", "tipTitle": "Tip:", "tipText": "Be descriptive with your prompts for better results. For example: \"A beautiful landscape with mountains and a lake at sunset, realistic style\"", "messages": { "initiated": "Image generation initiated! Check back later to view your generated image.", "failed": "Failed to generate image", "error": "An error occurred while generating the image" } },
+  "EditImage": { "title": "Edit Image", "backToDashboard": "Back to Dashboard", "modifyExistingImage": "Modify Existing Image", "uploadImage": "Upload Image", "supportedFormats": "Supported formats: JPEG, PNG, GIF, WebP. Max size: 50MB", "editPrompt": "Edit Prompt", "editPromptPlaceholder": "Describe how you want to modify the image...", "editPromptExample": "Example: \"Make the sky more blue and add clouds\"", "aiModel": "AI Model", "strength": "Strength", "strengthScale": { "subtle": "Subtle Changes", "moderate": "Moderate Changes", "dramatic": "Dramatic Changes" }, "cost": "Cost", "balance": "Balance", "credits": "credits", "edit": "Edit Image", "editing": "Editing...", "imagePreview": "Image Preview", "tips": "Tip: Be specific with your edit prompts. For example: \"Change the background to a beach scene\" or \"Add a hat to the person\"", "messages": { "initiated": "Image editing initiated! Check back later to view your edited image.", "failed": "Failed to edit image", "error": "An error occurred while editing the image", "noImage": "Please select an image to edit.", "invalidType": "Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.", "tooLarge": "File size exceeds 50MB limit." } },
+  "Gallery": { "title": "My Gallery", "loading": "Loading...", "noImagesTitle": "No Images Yet", "noImagesDesc": "You haven't generated or edited any images yet. Get started by creating your first image!", "imagePreview": "Image Preview", "untitled": "Untitled", "bestValue": "Best Value", "generateImage": "Generate Image", "editImage": "Edit Image", "modelName": "Model", "date": "Date" },
+  "PurchaseCredits": { "title": "Purchase Credits", "backToDashboard": "Back to Dashboard", "buyMoreCredits": "Buy More Credits", "bestValueBadge": "Best Value", "perCredit": "per credit", "buyNow": "Buy Now", "processing": "Processing...", "messages": { "intentCreated": "Payment intent created successfully. Redirecting to payment...", "success": "Payment successful! Credits will be added to your account shortly.", "failed": "Failed to create payment intent", "error": "An error occurred while processing your payment" }, "currentBalance": "Current Balance", "credits": "credits" },
+  "Blog": {
+    "title": "Latest Articles",
+    "intro": "Explore tutorials, tips and stories about AI image generation.",
+    "readMore": "Read more",
+    "readTime": "{minutes} min read",
+    "openPost": "Open Post"
+  },
+  "BlogPost": {
+    "backToBlog": "Back to Blog",
+    "unknown": "This post is not available.",
+    "mastering-ai-image-generation": {
+      "title": "Mastering AI Image Generation",
+      "subtitle": "Best practices, prompt engineering, and model selection"
+    }
+  },
+  "Contact": {
+    "title": "Contact Us",
+    "support": "Support",
+    "emailUs": "Email us at support@oliyo.com",
+    "responseTime": "We typically respond within 24 hours on business days.",
+    "refundPolicy": "Refund Policy",
+    "refundDetail": "Refunds are considered for unused credits on a case-by-case basis."
+  },
+  "FAQ": {
+    "title": "Frequently Asked Questions",
+    "items": [
+      { "q": "What if I'm not satisfied with the generated image?", "a": "You can regenerate with different prompts or edit it. We're constantly improving our AI models." },
+      { "q": "Do you offer refunds for purchased credits?", "a": "We offer refunds on a case-by-case basis for unused credits. Please contact support." }
+    ],
+    "moreHelp": "Need more help? Contact our support team."
   },
   "Common": {
+    "home": "Home",
+    "about": "About",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "blog": "Blog",
+    "docs": "Docs",
+    "admin": "Admin",
+    "dashboard": "Dashboard",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "register": "Register",
+    "login": "Login",
+    "logout": "Logout",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -123,7 +193,7 @@
     "error": "Error",
     "success": "Success",
     "warning": "Warning",
-    "info": "Info",
+    "info": "Information",
     "yes": "Yes",
     "no": "No",
     "ok": "OK",

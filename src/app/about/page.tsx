@@ -1,5 +1,10 @@
-// src/app/about/page.tsx
+ // src/app/about/page.tsx
+'use client';
+import { useLocale, useTranslations } from 'next-intl';
 export default function About() {
+  const locale = useLocale();
+  const tCommon = useTranslations('Common');
+  const tAbout = useTranslations('About');
   return (
     <div style={{ 
       minHeight: '100vh', 
@@ -26,7 +31,7 @@ export default function About() {
           </h1>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <a
-              href="/"
+              href={`/${locale}/`}
               style={{ 
                 padding: '0.5rem 1rem', 
                 backgroundColor: '#e5e7eb', 
@@ -36,10 +41,10 @@ export default function About() {
                 textDecoration: 'none'
               }}
             >
-              Home
+              {tCommon('home')}
             </a>
             <a
-              href="/login"
+              href={`/${locale}/login`}
               style={{ 
                 padding: '0.5rem 1rem', 
                 backgroundColor: '#2563eb', 
@@ -49,7 +54,7 @@ export default function About() {
                 textDecoration: 'none'
               }}
             >
-              Sign In
+              {tCommon('signIn')}
             </a>
           </div>
         </div>
@@ -70,7 +75,7 @@ export default function About() {
           padding: '2rem'
         }}>
           <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
-            About Us
+            {tAbout('title')}
           </h1>
           
           <div style={{ 
@@ -81,31 +86,25 @@ export default function About() {
           }}>
             <div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
-                Our Vision
+                {tAbout('visionTitle')}
               </h2>
               <p style={{ color: '#4b5563', lineHeight: '1.6' }}>
-                At Oliyo AI Image Platform, we believe that everyone deserves to bring their creative visions to life. 
-                Our mission is to democratize access to powerful AI image generation and editing tools, making professional-level 
-                creative resources available to individuals, artists, designers, and businesses of all sizes.
+                {tAbout('visionP1')}
               </p>
               <p style={{ color: '#4b5563', lineHeight: '1.6', marginTop: '1rem' }}>
-                We're building a platform where imagination meets technology, enabling users to transform simple text 
-                prompts into stunning visuals in seconds.
+                {tAbout('visionP2')}
               </p>
             </div>
             
             <div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
-                Our Technology
+                {tAbout('techTitle')}
               </h2>
               <p style={{ color: '#4b5563', lineHeight: '1.6' }}>
-                We leverage cutting-edge artificial intelligence models including qwen-image-edit and gemini-flash-image 
-                to provide unparalleled image generation and editing capabilities. Our platform is built with performance, 
-                security, and ease of use in mind.
+                {tAbout('techP1')}
               </p>
               <p style={{ color: '#4b5563', lineHeight: '1.6', marginTop: '1rem' }}>
-                Our cloud-based infrastructure ensures fast processing times and scalable performance to handle your 
-                creative demands, whether you're generating a single image or bulk processing hundreds.
+                {tAbout('techP2')}
               </p>
             </div>
           </div>
@@ -117,7 +116,7 @@ export default function About() {
             borderRadius: '0.5rem' 
           }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1rem' }}>
-              How It Works
+              {tAbout('howTitle')}
             </h2>
             <div style={{ 
               display: 'grid', 
@@ -139,10 +138,10 @@ export default function About() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                    Sign Up
+                    {tAbout('step1Title')}
                   </h3>
                   <p style={{ color: '#4b5563' }}>
-                    Create your account and receive 100 free credits to get started.
+                    {tAbout('step1P')}
                   </p>
                 </div>
               </div>
@@ -161,10 +160,10 @@ export default function About() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                    Describe Your Vision
+                    {tAbout('step2Title')}
                   </h3>
                   <p style={{ color: '#4b5563' }}>
-                    Enter a text prompt describing the image you want to create or edit.
+                    {tAbout('step2P')}
                   </p>
                 </div>
               </div>
@@ -183,10 +182,10 @@ export default function About() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                    Generate or Edit
+                    {tAbout('step3Title')}
                   </h3>
                   <p style={{ color: '#4b5563' }}>
-                    Our AI models create or modify your image based on your prompt.
+                    {tAbout('step3P')}
                   </p>
                 </div>
               </div>
@@ -205,10 +204,10 @@ export default function About() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                    Enjoy Your Creations
+                    {tAbout('step4Title')}
                   </h3>
                   <p style={{ color: '#4b5563' }}>
-                    Download, share, or continue editing your generated images.
+                    {tAbout('step4P')}
                   </p>
                 </div>
               </div>
@@ -224,14 +223,14 @@ export default function About() {
             color: 'white'
           }}>
             <h2 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-              Ready to Start Creating?
+              {tAbout('ctaTitle')}
             </h2>
             <p style={{ fontSize: '1.25rem', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>
-              Join thousands of creators who are bringing their ideas to life with our AI-powered platform.
+              {tAbout('ctaP')}
             </p>
             <div>
               <a
-                href="/register"
+                href={`/${locale}/register`}
                 style={{ 
                   padding: '1rem 2rem', 
                   backgroundColor: 'white', 
@@ -243,7 +242,7 @@ export default function About() {
                   fontSize: '1.125rem'
                 }}
               >
-                Get Started Now - 100 Free Credits
+                {tAbout('ctaButton')}
               </a>
             </div>
           </div>
@@ -266,9 +265,9 @@ export default function About() {
           gap: '1rem'
         }}>
           <div style={{ display: 'flex', gap: '2rem' }}>
-            <a href="/" style={{ color: '#6b7280', textDecoration: 'none' }}>Home</a>
-            <a href="/about" style={{ color: '#6b7280', textDecoration: 'none' }}>About</a>
-            <a href="#" style={{ color: '#6b7280', textDecoration: 'none' }}>Contact</a>
+            <a href={`/${locale}/`} style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('home')}</a>
+            <a href={`/${locale}/about`} style={{ color: '#6b7280', textDecoration: 'none' }}>{tCommon('about')}</a>
+            <a href={`/${locale}/contact`} style={{ color: '#6b7280', textDecoration: 'none' }}>Contact</a>
           </div>
           <p style={{ color: '#4b5563' }}>
             © {new Date().getFullYear()} Oliyo AI Image Platform. All rights reserved.

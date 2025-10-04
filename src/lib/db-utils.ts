@@ -224,7 +224,7 @@ export async function findArticles(limit: number = 20, offset: number = 0, statu
  * Generic function to create an article
  * Reduces code duplication across services that need to create articles
  */
-export async function createArticle(data: Partial<Article>): Promise<Article> {
+export async function createArticle(data: Omit<Article, 'id'>): Promise<Article> {
   return prisma.article.create({
     data,
   });
@@ -265,7 +265,7 @@ export async function findSessionByToken(token: string): Promise<Session | null>
  * Generic function to create a session
  * Reduces code duplication across services that need to create sessions
  */
-export async function createSession(data: Partial<Session>): Promise<Session> {
+export async function createSession(data: Omit<Session, 'id'>): Promise<Session> {
   return prisma.session.create({
     data,
   });
@@ -327,7 +327,7 @@ export async function aggregateCreditTransactions(whereClause: any, aggregation:
     [aggregation]: {
       amount: true,
     },
-  });
+  } as any);
 }
 
 /**
