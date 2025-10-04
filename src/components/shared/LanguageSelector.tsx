@@ -26,7 +26,7 @@ export default function LanguageSelector() {
 
   // 从URL中检测当前语言
   useEffect(() => {
-    const pathSegments = pathname.split('/');
+    const pathSegments = (pathname ?? '').split('/');
     const langFromPath = pathSegments[1];
     if (languages.some(lang => lang.code === langFromPath)) {
       setCurrentLang(langFromPath);
@@ -52,7 +52,7 @@ export default function LanguageSelector() {
     setIsOpen(false);
     
     // 构建新的URL
-    const pathSegments = pathname.split('/');
+    const pathSegments = (pathname ?? '').split('/');
     const isCurrentlyLocalized = languages.some(lang => lang.code === pathSegments[1]);
     
     let newPath;
@@ -62,7 +62,8 @@ export default function LanguageSelector() {
       newPath = pathSegments.join('/');
     } else {
       // 添加语言代码
-      newPath = `/${langCode}${pathname}`;
+      const currentPath = pathname ?? '';
+      newPath = `/${langCode}${currentPath}`;
     }
     
     router.push(newPath);

@@ -27,8 +27,9 @@ export default function LanguageSwitcher() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // 从路径中获取当前语言
-    const pathSegments = pathname.split('/');
+    // 从路径中获取当前语言（usePathname 可能为 null，需要做空值保护）
+    const safePathname = pathname ?? '';
+    const pathSegments = safePathname.split('/');
     const localeFromPath = pathSegments[1];
     if (languages.find(lang => lang.code === localeFromPath)) {
       setCurrentLocale(localeFromPath);
@@ -47,10 +48,15 @@ export default function LanguageSwitcher() {
   }, []);
 
   const handleLanguageChange = (langCode: string) => {
-    const pathSegments = pathname.split('/');
-    pathSegments[1] = langCode;
-    const newPath = pathSegments.join('/');
-    router.push(newPath);
+    const safePathname = pathname ?? '';
+    const pathSegments = safePathname.split('/');
+    if (pathSegments.length > 1) {
+      pathSegments[1] = langCode;
+      const newPath = pathSegments.join('/');
+      router.push(newPath);
+    } else {
+      router.push(`/${langCode}`);
+    }
     setIsOpen(false);
   };
 
