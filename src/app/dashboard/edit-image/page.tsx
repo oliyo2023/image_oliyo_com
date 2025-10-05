@@ -76,49 +76,70 @@ export default function EditImage() {
     setMessage('');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedImage) {
-      setMessage(t('messages.noImage'));
-      return;
-    }
+ const handleSubmit = async (e: React.FormEvent) => {
+   e.preventDefault();
+   if (!selectedImage) {
+     setMessage(t('messages.noImage'));
+     return;
+   }
 
-    setLoading(true);
-    setMessage('');
+   setLoading(true);
+   setMessage('');
 
-    try {
-      const token = localStorage.getItem('token');
+   try {
+     const token = localStorage.getItem('token');
 
-      const response = await fetch('/api/images/edit', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          prompt,
-          model: selectedModel,
-          strength
-        })
-      });
+     // First, upload the image
+     const formData = new FormData();
+     formData.append('image', selectedImage);
 
-      const data = await response.json();
+     const uploadResponse = await fetch('/api/images/upload', {
+       method: 'POST',
+       headers: {
+         'Authorization': `Bearer ${token}`
+       },
+       body: formData
+     });
 
-      if (response.ok) {
-        setMessage(t('messages.initiated'));
-        setPrompt('');
-        setSelectedImage(null);
-        setPreviewUrl('');
-      } else {
-        setMessage(data.message || t('messages.failed'));
-      }
-    } catch (error) {
-      setMessage(t('messages.error'));
-      console.error('Error editing image:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+     const uploadData = await uploadResponse.json();
+
+     if (!uploadResponse.ok) {
+       setMessage(uploadData.message || t('messages.uploadFailed'));
+       return;
+     }
+
+     // Then, edit the uploaded image
+     const editResponse = await fetch('/api/images/edit', {
+       method: 'POST',
+       headers: {
+         'Authorization': `Bearer ${token}`,
+         'Content-Type': 'application/json'
+       },
+       body: JSON.stringify({
+         prompt,
+         model: selectedModel,
+         strength,
+         originalImageId: uploadData.imageId
+       })
+     });
+
+     const editData = await editResponse.json();
+
+     if (editResponse.ok) {
+       setMessage(t('messages.initiated'));
+       setPrompt('');
+       setSelectedImage(null);
+       setPreviewUrl('');
+     } else {
+       setMessage(editData.message || t('messages.failed'));
+     }
+   } catch (error) {
+     setMessage(t('messages.error'));
+     console.error('Error editing image:', error);
+   } finally {
+     setLoading(false);
+   }
+ };
 
   const handleBack = () => {
     router.push(`/${locale}/dashboard`);
@@ -269,8 +290,8 @@ export default function EditImage() {
                       boxSizing: 'border-box'
                     }}
                   >
-                    <option value="qwen-image-edit">Qwen Image Edit (5 {t('credits')})</option>
-                    <option value="gemini-flash-image">Gemini Flash Image (3 {t('credits')})</option>
+                    <option value="qwen-image-edit">Qwen Image Edit (10 {t('credits')})</option>
+                    <option value="gemini-flash-image">Gemini Flash Image (30 {t('credits')})</option>
                   </select>
                 </div>
 
@@ -310,7 +331,7 @@ export default function EditImage() {
                   <div>
                     <span style={{ fontWeight: 'bold' }}>{t('cost')}:</span>
                     <span style={{ marginLeft: '0.5rem' }}>
-                      {selectedModel === 'qwen-image-edit' ? '5' : '3'} {t('credits')}
+                      {selectedModel === 'qwen-image-edit' ? '10' : '30'} {t('credits')}
                     </span>
                   </div>
                   <div>

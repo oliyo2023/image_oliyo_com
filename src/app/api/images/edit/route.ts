@@ -39,12 +39,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse form data for image editing
-    const formData = await request.formData();
-    const prompt = formData.get('prompt') as string;
-    const model = formData.get('model') as string;
-    const imageFile = formData.get('image') as File | null;
-    const strength = formData.get('strength') as string;
+    // Parse JSON data for image editing
+    const body = await request.json();
+    const { prompt, model, strength, originalImageId } = body;
 
     // Validate required fields
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length < 1 || prompt.trim().length > 1000) {
@@ -94,22 +91,44 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Note: In a real implementation, we would need to handle the image upload
-    // For this implementation, we'll assume the image has already been uploaded
-    // and we're getting the original image ID as part of the request or from the file
-    // For simplicity, we'll simulate that we have an original image ID
-    // In a real app, we'd need to implement image upload handling and storage
-    
-    // For now, we'll simulate the editing process without handling actual file upload
-    // This endpoint would typically work with an already uploaded image identified by an ID
-    // Rather than a new file upload in the same request
-    return Response.json(
-      { 
-        error: 'Not implemented',
-        message: 'Image editing endpoint needs proper file upload implementation' 
-      },
-      { status: 501 }
-    );
+    // Validate original image ID
+    if (!originalImageId) {
+      return Response.json(
+        {
+          error: 'Invalid input',
+          message: 'Original image ID is required'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Call the editImage function
+    const result = await editImage({
+      userId,
+      originalImageId,
+      prompt: prompt.trim(),
+      model,
+      strength: strength || 0.5,
+    });
+
+    if (result.status === 'success') {
+      return Response.json({
+        success: true,
+        message: 'Image editing initiated',
+        imageId: result.imageUrl ? result.imageUrl.split('/').pop() : '', // Extract image ID from URL
+        status: 'processing',
+        taskId: result.taskId,
+        estimatedCompletion: new Date(Date.now() + 90000).toISOString() // Estimate 1.5 minutes
+      });
+    } else {
+      return Response.json(
+        {
+          error: 'Image editing failed',
+          message: result.message
+        },
+        { status: 500 }
+      );
+    }
   } catch (error: any) {
     console.error('Image editing error:', error);
     

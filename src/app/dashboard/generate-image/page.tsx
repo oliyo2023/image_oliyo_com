@@ -217,8 +217,8 @@ export default function GenerateImage() {
                       boxSizing: 'border-box'
                     }}
                   >
-                    <option value="qwen-image-edit">Qwen Image Edit (5 {t('credits')})</option>
-                    <option value="gemini-flash-image">Gemini Flash Image (3 {t('credits')})</option>
+                    <option value="qwen-image-edit">Qwen Image Edit (10 {t('credits')})</option>
+                    <option value="gemini-flash-image">Gemini Flash Image (30 {t('credits')})</option>
                   </select>
                 </div>
 
@@ -299,7 +299,7 @@ export default function GenerateImage() {
                   <div>
                     <span style={{ fontWeight: 'bold' }}>{t('cost')}:</span>
                     <span style={{ marginLeft: '0.5rem' }}>
-                      {selectedModel === 'qwen-image-edit' ? '5' : '3'} {t('credits')}
+                      {selectedModel === 'qwen-image-edit' ? '10' : '30'} {t('credits')}
                     </span>
                   </div>
                   <div>

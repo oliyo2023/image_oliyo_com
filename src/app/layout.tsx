@@ -11,6 +11,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Oliyo AI Image Platform',
   description: 'Generate and edit images using advanced AI models',
+  icons: { icon: '/favicon.ico' }
 };
 
 export default function RootLayout({

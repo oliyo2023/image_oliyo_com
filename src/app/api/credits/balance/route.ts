@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 import { NextRequest } from 'next/server';
 import { verifyToken, getUserProfile } from '@/lib/auth';
 import { getUserCreditBalance } from '@/lib/credit';
