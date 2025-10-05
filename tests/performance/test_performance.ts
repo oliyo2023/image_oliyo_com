@@ -1,9 +1,9 @@
 import { describe, it, expect } from '@jest/globals';
 import axios from 'axios';
-import { AIService } from '../lib/services/ai-service';
+import { AIService } from '../../lib/services/ai-service';
 
 // Mock the AI service to simulate API calls for performance testing
-jest.mock('../lib/services/ai-service', () => {
+jest.mock('../../lib/services/ai-service', () => {
   return {
     AIService: jest.fn().mockImplementation(() => {
       return {
@@ -62,8 +62,8 @@ describe('Performance Tests', () => {
   describe('Concurrent Request Handling', () => {
     it('should handle 10 concurrent requests without significant performance degradation', async () => {
       const requestCount = 10;
-      const requests = [];
-      const startTimes = [];
+      const requests: Promise<{ success: boolean; requestNumber: number; startTime: number; endTime: number }>[] = [];
+      const startTimes: number[] = [];
       
       // Record start times for each request
       for (let i = 0; i < requestCount; i++) {

@@ -1,11 +1,12 @@
 import { User, Prisma } from '@prisma/client';
+export type SafeUser = Omit<User, 'passwordHash'>;
 import prisma from './db';
 import { getUserCreditBalance, getUserCreditHistory, getTotalCreditsSpent, getTotalCreditsEarned, getTotalCreditsPurchased } from './credit';
 
 /**
  * Gets a user by ID, excluding sensitive information
  */
-export async function getUserById(userId: string): Promise<User | null> {
+export async function getUserById(userId: string): Promise<SafeUser | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
@@ -16,13 +17,13 @@ export async function getUserById(userId: string): Promise<User | null> {
 
   // Return user without password hash
   const { passwordHash, ...userWithoutPassword } = user;
-  return userWithoutPassword;
+  return userWithoutPassword as SafeUser;
 }
 
 /**
  * Gets a user by email, excluding sensitive information
  */
-export async function getUserByEmail(email: string): Promise<User | null> {
+export async function getUserByEmail(email: string): Promise<SafeUser | null> {
   const user = await prisma.user.findUnique({
     where: { email: email.toLowerCase() },
   });
@@ -33,7 +34,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 
   // Return user without password hash
   const { passwordHash, ...userWithoutPassword } = user;
-  return userWithoutPassword;
+  return userWithoutPassword as SafeUser;
 }
 
 /**

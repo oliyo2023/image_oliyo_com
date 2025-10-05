@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createMocks } from 'node-mocks-http';
-import { editHandler } from '../../../pages/api/images/edit';
+import { editHandler } from '../../src/lib/test-compat/editHandler';
 
 describe('Contract Test: POST /api/images/edit', () => {
   it('should edit an existing image using a text prompt and AI models', async () => {

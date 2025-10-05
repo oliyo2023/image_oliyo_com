@@ -2,7 +2,7 @@ import { PrismaClient, Image, User, AIModel } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { validateImage } from '../utils/image';
 
-const prisma = new PrismaClient();
+
 
 export interface CreateImageInput {
   userId: string;
@@ -23,6 +23,7 @@ export interface UpdateImageInput {
 }
 
 export class ImageService {
+  constructor(private prisma: PrismaClient = new PrismaClient()) {}
   /**
    * Creates a new image record
    */
@@ -43,7 +44,7 @@ export class ImageService {
     validateImage(fileSize, fileFormat);
 
     // Create the image record
-    return prisma.image.create({
+    return this.prisma.image.create({
       data: {
         userId,
         originalFilename,
@@ -62,7 +63,7 @@ export class ImageService {
    * Finds an image by ID
    */
   async findImageById(id: string): Promise<Image | null> {
-    return prisma.image.findUnique({
+    return this.prisma.image.findUnique({
       where: { id }
     });
   }
@@ -71,7 +72,7 @@ export class ImageService {
    * Finds all images for a user
    */
   async getImagesByUserId(userId: string, limit?: number, offset?: number): Promise<Image[]> {
-    return prisma.image.findMany({
+    return this.prisma.image.findMany({
       where: { userId },
       orderBy: { creationDate: 'desc' },
       skip: offset || 0,
@@ -85,7 +86,7 @@ export class ImageService {
   async updateImage(input: UpdateImageInput): Promise<Image> {
     const { id, ...updateData } = input;
     
-    return prisma.image.update({
+    return this.prisma.image.update({
       where: { id },
       data: updateData
     });
@@ -95,7 +96,7 @@ export class ImageService {
    * Deletes an image record
    */
   async deleteImage(id: string): Promise<Image> {
-    return prisma.image.delete({
+    return this.prisma.image.delete({
       where: { id }
     });
   }
@@ -104,7 +105,7 @@ export class ImageService {
    * Links an edited image to its original
    */
   async linkToOriginalImage(editedImageId: string, originalImageId: string): Promise<Image> {
-    return prisma.image.update({
+    return this.prisma.image.update({
       where: { id: editedImageId },
       data: { originalImageId }
     });
@@ -114,7 +115,7 @@ export class ImageService {
    * Gets an image with its original (for edited images)
    */
   async getImageWithOriginal(id: string): Promise<(Image & { originalImage: Image | null }) | null> {
-    const image = await prisma.image.findUnique({
+    const image = await this.prisma.image.findUnique({
       where: { id },
       include: {
         originalImage: true
@@ -128,7 +129,7 @@ export class ImageService {
    * Gets user gallery (all images for the user)
    */
   async getUserGallery(userId: string): Promise<Image[]> {
-    return prisma.image.findMany({
+    return this.prisma.image.findMany({
       where: { 
         userId
       },
@@ -140,7 +141,7 @@ export class ImageService {
    * Gets statistics about user's images
    */
   async getUserImageStats(userId: string) {
-    const images = await prisma.image.findMany({
+    const images = await this.prisma.image.findMany({
       where: { userId },
       select: {
         fileSize: true
@@ -160,7 +161,7 @@ export class ImageService {
    * Verifies if a user owns an image
    */
   async verifyImageOwnership(imageId: string, userId: string): Promise<boolean> {
-    const image = await prisma.image.findUnique({
+    const image = await this.prisma.image.findUnique({
       where: { id: imageId }
     });
 

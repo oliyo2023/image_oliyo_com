@@ -41,7 +41,6 @@ export default function Home() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
-    const locale = useLocale();
     router.push(`/${locale}`);
   };
 

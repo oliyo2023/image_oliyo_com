@@ -1,6 +1,6 @@
 import { PrismaClient, CreditTransaction, User } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
 
 export interface CreateCreditTransactionInput {
   userId: string;
@@ -15,6 +15,7 @@ export interface CreditTransactionWithUser extends CreditTransaction {
 }
 
 export class CreditService {
+  constructor(private prisma: PrismaClient = new PrismaClient()) {}
   /**
    * Creates a new credit transaction and updates the user's balance
    */
@@ -27,7 +28,7 @@ export class CreditService {
     }
     
     // Begin a transaction to ensure consistency
-    return prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       // Create the transaction record
       const transaction = await tx.creditTransaction.create({
         data: {
@@ -62,7 +63,7 @@ export class CreditService {
     }
     
     // Check if user has sufficient credits
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId }
     });
     
@@ -101,7 +102,7 @@ export class CreditService {
    * Gets all credit transactions for a user
    */
   async getUserTransactions(userId: string, limit?: number, offset?: number): Promise<CreditTransaction[]> {
-    return prisma.creditTransaction.findMany({
+    return this.prisma.creditTransaction.findMany({
       where: { userId },
       orderBy: { date: 'desc' },
       skip: offset || 0,
@@ -113,7 +114,7 @@ export class CreditService {
    * Gets a specific transaction by ID
    */
   async getTransactionById(id: string): Promise<CreditTransaction | null> {
-    return prisma.creditTransaction.findUnique({
+    return this.prisma.creditTransaction.findUnique({
       where: { id }
     });
   }
@@ -122,7 +123,7 @@ export class CreditService {
    * Gets credit transaction history with user info
    */
   async getTransactionHistoryWithUser(limit?: number, offset?: number): Promise<CreditTransactionWithUser[]> {
-    return prisma.creditTransaction.findMany({
+    return this.prisma.creditTransaction.findMany({
       include: {
         user: true
       },
@@ -160,7 +161,7 @@ export class CreditService {
    * Gets user's current credit balance
    */
   async getUserBalance(userId: string): Promise<number> {
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { creditBalance: true }
     });

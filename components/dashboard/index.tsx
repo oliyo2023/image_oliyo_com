@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface DashboardProps {
   userId: string;
@@ -205,7 +206,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               {recentImages.map(image => (
                 <div key={image.id} className="image-card">
                   <div className="image-preview">
-                    <img src={image.storagePath} alt={image.originalFilename} />
+                    <Image src={image.storagePath} alt={image.originalFilename} width={400} height={300} />
                   </div>
                   <div className="image-info">
                     <h4>{image.originalFilename}</h4>

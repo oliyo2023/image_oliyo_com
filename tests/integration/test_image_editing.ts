@@ -1,9 +1,9 @@
 import { describe, it, expect } from '@jest/globals';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createMocks } from 'node-mocks-http';
-import { registerHandler } from '../../../pages/api/auth/register';
-import { uploadHandler } from '../../../pages/api/images/upload';
-import { editHandler } from '../../../pages/api/images/edit';
+import { registerHandler } from '../../src/lib/test-compat/registerHandler';
+import { uploadHandler } from '../../src/lib/test-compat/uploadHandler';
+import { editHandler } from '../../src/lib/test-compat/editHandler';
 
 describe('Integration Test: Image Editing Workflow', () => {
   it('should complete full image editing workflow from registration to image editing', async () => {

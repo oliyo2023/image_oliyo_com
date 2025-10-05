@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createMocks } from 'node-mocks-http';
-import { logoutHandler } from '../../../pages/api/auth/logout';
+import { logoutHandler } from '../../src/lib/test-compat/logoutHandler';
 
 describe('Contract Test: POST /api/auth/logout', () => {
   it('should logout user and invalidate session', async () => {

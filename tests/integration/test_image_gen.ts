@@ -54,7 +54,7 @@ describe('Image Generation API Performance Tests', () => {
       const startTime = Date.now();
       
       // Simulate 100 image generation requests
-      const requests = [];
+      const requests: Promise<Response>[] = [];
       for (let i = 0; i < 100; i++) {
         requests.push(fetch('/api/images/generate', {
           method: 'POST',
@@ -111,7 +111,7 @@ describe('Image Generation API Performance Tests', () => {
       // We'll simulate user interactions with the image generation form
       
       // Mock dependencies
-      const interactionTimes = [];
+      const interactionTimes: number[] = [];
       
       // Simulate 100 user interactions with the image generation form
       for (let i = 0; i < 100; i++) {
@@ -168,7 +168,7 @@ describe('Image Generation API Performance Tests', () => {
       // We'll simulate page loads with image content
       
       // Mock dependencies
-      const layoutShifts = [];
+      const layoutShifts: number[] = [];
       
       // Simulate 100 page loads with image content
       for (let i = 0; i < 100; i++) {
@@ -209,7 +209,7 @@ describe('Image Generation API Performance Tests', () => {
       const startTime = Date.now();
       
       // Simulate 100 API requests
-      const requests = [];
+      const requests: Promise<Response>[] = [];
       for (let i = 0; i < 100; i++) {
         requests.push(fetch('/api/images/generate', {
           method: 'POST',
@@ -270,7 +270,7 @@ describe('Image Generation API Performance Tests', () => {
       const startTime = Date.now();
       
       // Simulate 100 image generation requests
-      const requests = [];
+      const requests: Promise<Response>[] = [];
       for (let i = 0; i < 100; i++) {
         requests.push(fetch('/api/images/generate', {
           method: 'POST',
@@ -331,7 +331,7 @@ describe('Image Generation API Performance Tests', () => {
       const startTime = Date.now();
       
       // Simulate 150 concurrent users each making 1 request
-      const userRequests = [];
+      const userRequests: Promise<Response>[] = [];
       for (let userIndex = 0; userIndex < 150; userIndex++) {
         userRequests.push(fetch('/api/images/generate', {
           method: 'POST',
@@ -405,7 +405,7 @@ describe('Image Generation API Performance Tests', () => {
       const startTime = Date.now();
       
       // Simulate 100 database queries
-      const dbQueries = [];
+      const dbQueries: Promise<any>[] = [];
       for (let i = 0; i < 100; i++) {
         dbQueries.push(prisma.user.findUnique({
           where: { id: mockUser.id },
@@ -459,7 +459,7 @@ describe('Image Generation API Performance Tests', () => {
       const initialMemory = process.memoryUsage();
       
       // Simulate normal operation with 100 requests
-      const requests = [];
+      const requests: Promise<Response>[] = [];
       for (let i = 0; i < 100; i++) {
         requests.push(fetch('/api/images/generate', {
           method: 'POST',
@@ -509,7 +509,7 @@ describe('Image Generation API Performance Tests', () => {
       const startTime = Date.now();
       
       // Simulate 100 error requests (invalid input)
-      const errorRequests = [];
+      const errorRequests: Promise<Response>[] = [];
       for (let i = 0; i < 100; i++) {
         errorRequests.push(fetch('/api/images/generate', {
           method: 'POST',
@@ -570,7 +570,7 @@ describe('Image Generation API Performance Tests', () => {
       const startTime = Date.now();
       
       // Simulate 50 requests (under rate limit of 100/hour)
-      const requests = [];
+      const requests: Promise<Response>[] = [];
       for (let i = 0; i < 50; i++) {
         requests.push(fetch('/api/images/generate', {
           method: 'POST',
@@ -641,10 +641,10 @@ describe('Image Generation API Performance Tests', () => {
       
       // Simulate increasing load: 25, 50, 75, 100 requests in sequence
       const loadLevels = [25, 50, 75, 100];
-      const results = [];
+      const results: { loadLevel: number; responseTime: number; successRate: number }[] = [];
       
       for (const loadLevel of loadLevels) {
-        const requests = [];
+        const requests: Promise<Response>[] = [];
         for (let i = 0; i < loadLevel; i++) {
           requests.push(fetch('/api/images/generate', {
             method: 'POST',

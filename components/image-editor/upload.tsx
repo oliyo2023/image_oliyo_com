@@ -1,4 +1,5 @@
 import React, { useState, useRef, ChangeEvent, FormEvent } from 'react';
+import Image from 'next/image';
 
 interface ImageUploadProps {
   onUpload: (file: File) => void;
@@ -129,7 +130,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           
           {previewUrl && selectedFile ? (
             <div className="preview-container">
-              <img src={previewUrl} alt="Preview" className="preview-image" />
+              <Image src={previewUrl} alt="Preview" className="preview-image" width={400} height={300} />
               <p className="file-info">{selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)</p>
             </div>
           ) : (

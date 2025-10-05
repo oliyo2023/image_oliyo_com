@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface Image {
   id: string;
@@ -192,10 +193,12 @@ const Gallery: React.FC<GalleryProps> = ({
             onClick={() => handleImageClick(image)}
           >
             <div className="image-container">
-              <img 
+              <Image 
                 src={image.storagePath} 
                 alt={image.originalFilename} 
                 className="gallery-image"
+                width={400}
+                height={300}
               />
             </div>
             <div className="image-info">

@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createMocks } from 'node-mocks-http';
-import { registerHandler } from '../../../pages/api/auth/register';
+import { registerHandler } from '../../src/lib/test-compat/registerHandler';
 
 describe('Contract Test: POST /api/auth/register', () => {
   it('should register a new user and grant initial credits', async () => {

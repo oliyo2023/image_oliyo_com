@@ -21,13 +21,7 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback_jwt_secret_for_development'
 );
 
-interface JWTPayload {
-  jti: string; // Token ID
-  iat: number; // Issued at
-  exp: number; // Expiration
-  userId: string;
-  email: string;
-}
+import { JWTPayload, verifyToken } from './lib/auth';
 
 import { getLocales } from '../i18n';
 
@@ -118,9 +112,17 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // Verify the token
-    const verified = await jwtVerify(token, JWT_SECRET);
-    const payload = verified.payload as JWTPayload;
+    // 使用项目统一的验证函数，避免不安全的类型强转
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return new NextResponse(
+        JSON.stringify({
+          error: 'Unauthorized',
+          message: 'Invalid or expired token',
+        }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Apply rate limiting based on user ID
     // For high-usage routes, we might want to use a stricter limit
@@ -209,9 +211,10 @@ export async function authenticateAdmin(
   const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
   try {
-    // Verify token
-    const verified = await jwtVerify(token, JWT_SECRET);
-    const payload = verified.payload as JWTPayload;
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return null;
+    }
 
     // In a real implementation, we'd check the user's role from the database
     // For now, we'll simulate this by checking if the user ID matches an admin ID

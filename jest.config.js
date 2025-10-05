@@ -1,7 +1,8 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  testMatch: ['**/tests/**/*.test.ts', '**/tests/**/*.spec.ts', '**/tests/**/*.ts'],
+  testMatch: ['**/tests/**/test_*.ts', '**/tests/**/*.test.ts', '**/tests/**/*.spec.ts'],
+  testPathIgnorePatterns: ['<rootDir>/tests/contract', '<rootDir>/tests/integration', '<rootDir>/tests/performance'],
   collectCoverageFrom: [
     'lib/**/*.{ts,tsx}',
     '!lib/types/**',

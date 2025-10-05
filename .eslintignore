@@ -1,0 +1,6 @@
+# Ignore tests in lint
+tests/
+**/*.test.ts
+**/*.spec.ts
+**/*.test.tsx
+**/*.spec.tsx

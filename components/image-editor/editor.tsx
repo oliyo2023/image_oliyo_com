@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 import ImageUpload from './upload';
 
 interface ImageEditorProps {
@@ -76,7 +77,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ onEdit, availableModels }) =>
             
             <form onSubmit={handleSubmit} className="edit-form">
               <div className="image-preview">
-                <img src={selectedImage} alt="To be edited" />
+                <Image src={selectedImage} alt="To be edited" width={600} height={400} />
               </div>
               
               <div className="input-group">
@@ -120,7 +121,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ onEdit, availableModels }) =>
           <div className="result-section">
             <h3>Edited Image</h3>
             <div className="result-content">
-              <img src={editResult.url} alt="Edited result" />
+              <Image src={editResult.url} alt="Edited result" width={600} height={400} />
               <p>Image ID: {editResult.id}</p>
               <button 
                 onClick={() => {

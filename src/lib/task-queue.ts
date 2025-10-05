@@ -94,8 +94,14 @@ export async function updateTaskStatus(
     updateData.completedAt = new Date();
   }
 
-  return prisma.taskQueue.update({
+  const existing = await prisma.taskQueue.findFirst({
     where: { taskId },
+  });
+  if (!existing) {
+    throw new Error('Task not found');
+  }
+  return prisma.taskQueue.update({
+    where: { id: existing.id },
     data: updateData,
   });
 }
@@ -390,7 +396,7 @@ export async function startAdvancedBackgroundTaskProcessor(): Promise<() => void
  * Gets the position of a task in the queue
  */
 export async function getTaskQueuePosition(taskId: string): Promise<number> {
-  const task = await prisma.taskQueue.findUnique({
+  const task = await prisma.taskQueue.findFirst({
     where: { taskId },
   });
 

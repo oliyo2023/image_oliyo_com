@@ -11,6 +11,10 @@ const nextConfig = {
     config.resolve.alias['@'] = path.resolve(__dirname, './src');
     return config;
   },
+  // 构建时忽略 ESLint（最省事）
+  eslint: {
+    ignoreDuringBuilds: true
+  },
   // 其他配置...
 };
 

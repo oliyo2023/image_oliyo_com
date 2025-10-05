@@ -1,8 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createMocks } from 'node-mocks-http';
-import { registerHandler } from '../../../pages/api/auth/register';
-import { generateHandler } from '../../../pages/api/images/generate';
+import { registerHandler } from '../../src/lib/test-compat/registerHandler';
+import { generateHandler } from '../../src/lib/test-compat/generateHandler';
 
 describe('Integration Test: Image Generation Workflow', () => {
   it('should complete full image generation workflow from registration to image creation', async () => {

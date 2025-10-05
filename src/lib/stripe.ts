@@ -60,7 +60,7 @@ export async function createPaymentIntent(request: PaymentIntentRequest) {
         userId,
         packageInfo.credits,
         `Credit purchase: ${packageInfo.credits} credits`,
-        null
+        undefined
       );
 
       // Record the transaction
@@ -127,7 +127,7 @@ export async function confirmPayment(request: PaymentConfirmationRequest) {
         userId,
         purchaseRecord.credits,
         `Credit purchase confirmation: ${purchaseRecord.credits} credits`,
-        null
+        undefined
       );
 
       // Record the transaction
@@ -274,7 +274,7 @@ async function processSuccessfulPayment(paymentIntentId: string) {
       purchaseRecord.userId,
       purchaseRecord.credits,
       `Credit purchase (webhook): ${purchaseRecord.credits} credits`,
-      null
+      undefined
     );
 
     // Record the transaction
@@ -301,11 +301,11 @@ async function processSuccessfulPayment(paymentIntentId: string) {
 /**
  * Refund a payment
  */
-export async function refundPayment(paymentIntentId: string, reason?: string) {
+export async function refundPayment(paymentIntentId: string, reason?: Stripe.RefundCreateParams.Reason) {
   try {
     const refund = await stripe.refunds.create({
       payment_intent: paymentIntentId,
-      reason: reason || 'requested_by_customer',
+      reason: reason ?? 'requested_by_customer',
     });
 
     return refund;

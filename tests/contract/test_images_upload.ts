@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createMocks } from 'node-mocks-http';
-import { uploadHandler } from '../../../pages/api/images/upload';
+import { uploadHandler } from '../../src/lib/test-compat/uploadHandler';
 
 describe('Contract Test: POST /api/images/upload', () => {
   it('should upload an image for later editing', async () => {

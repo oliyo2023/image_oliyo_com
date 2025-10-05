@@ -331,8 +331,61 @@ export async function DELETE(request: NextRequest, { params }: { params: { resou
       );
     }
 
-    // Release resource lock
-    const releaseResult = await releaseResourceLock(resourceType, resourceId, user.userId);
+    // Check lock status first
+    const lockStatus = await checkResourceLockStatus(resourceType, resourceId);
+
+    if (!lockStatus.isLocked) {
+      // Log audit action
+      await logAuditAction(
+        user.userId,
+        'RELEASE_RESOURCE_LOCK',
+        { 
+          resourceType,
+          resourceId,
+          message: 'Resource is not locked',
+          lockStatus
+        }
+      );
+
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Conflict: Resource is not locked' 
+        }),
+        { 
+          status: 409,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (lockStatus.lockedBy && lockStatus.lockedBy.id !== user.userId) {
+      // Log audit action
+      await logAuditAction(
+        user.userId,
+        'RELEASE_RESOURCE_LOCK',
+        { 
+          resourceType,
+          resourceId,
+          message: 'Resource locked by another user',
+          lockStatus
+        }
+      );
+
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Conflict: Resource locked by another user' 
+        }),
+        { 
+          status: 409,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Release resource lock with correct signature
+    const releaseResult = await releaseResourceLock(lockStatus.lockId, user.userId);
 
     // Log audit action
     await logAuditAction(

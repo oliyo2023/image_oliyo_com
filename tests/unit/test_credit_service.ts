@@ -40,7 +40,7 @@ describe('CreditService', () => {
         amount: 50,
         description: 'Welcome bonus',
         date: new Date(),
-        aiModelUsed: null,
+        relatedModelName: null,
       };
 
       // Mock the transaction function
@@ -53,7 +53,14 @@ describe('CreditService', () => {
       jest.spyOn(mockPrisma.user, 'update').mockResolvedValue({
         id: 'user-id-123',
         email: 'test@example.com',
+        passwordHash: '$2a$12$examplehash',
         creditBalance: 150, // 100 + 50
+        registrationDate: new Date(),
+        lastLogin: new Date(),
+        socialLoginProvider: null,
+        isActive: true,
+        role: 'user',
+        concurrentRequests: 0,
       });
 
       const result = await creditService.createCreditTransaction(mockInput);
@@ -64,7 +71,7 @@ describe('CreditService', () => {
           transactionType: 'CREDIT_BONUS',
           amount: 50,
           description: 'Welcome bonus',
-          aiModelUsed: undefined,
+          relatedModelName: undefined,
         }
       });
       expect(result).toEqual(mockTransaction);
@@ -103,6 +110,7 @@ describe('CreditService', () => {
         amount: -10, // Negative for deduction
         description,
         date: new Date(),
+        relatedModelName: null,
       };
 
       (mockPrisma.$transaction as jest.MockedFunction<any>).mockImplementation(async (callback) => {
@@ -122,7 +130,7 @@ describe('CreditService', () => {
           transactionType: 'IMAGE_GENERATION',
           amount: -10,
           description,
-          aiModelUsed: undefined,
+          relatedModelName: undefined,
         }
       });
       expect(result).toEqual(mockTransaction);
@@ -168,6 +176,7 @@ describe('CreditService', () => {
         amount: 25,
         description,
         date: new Date(),
+        relatedModelName: null,
       };
 
       (mockPrisma.$transaction as jest.MockedFunction<any>).mockImplementation(async (callback) => {
@@ -184,7 +193,7 @@ describe('CreditService', () => {
           transactionType: 'CREDIT_PURCHASE',
           amount: 25,
           description,
-          aiModelUsed: undefined,
+          relatedModelName: undefined,
         }
       });
       expect(result).toEqual(mockTransaction);

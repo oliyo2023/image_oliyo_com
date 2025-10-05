@@ -1,7 +1,9 @@
-import { NextIntlClientProvider } from 'next-intl';
+import IntlProvider from '../../components/i18n/IntlProvider';
 import { getMessages } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { locales } from '../../../i18n';
+
+export const dynamic = 'force-dynamic';
 
 // 为不同语言提供不同的元数据
 export async function generateMetadata({
@@ -50,9 +52,14 @@ export default async function LocaleLayout({
   // 使用传入的 locale 获取消息（next-intl v4 稳定用法）
   const messages = await getMessages({ locale });
 
+
   return (
-    <NextIntlClientProvider messages={messages} locale={locale}>
+    <IntlProvider
+      messages={messages}
+      locale={locale}
+
+    >
       {children}
-    </NextIntlClientProvider>
+    </IntlProvider>
   );
 }

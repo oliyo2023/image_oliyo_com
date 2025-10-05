@@ -167,7 +167,7 @@ describe('Image Editing Integration Tests', () => {
     it('should limit concurrent requests per user', async () => {
       // Test that users can only have a limited number of concurrent requests (3 per spec)
       // Make multiple requests simultaneously
-      const requests = [];
+      const requests: Promise<Response>[] = [];
       for (let i = 0; i < 5; i++) {
         const formData = new FormData();
         formData.append('prompt', `Concurrent test image ${i}`);

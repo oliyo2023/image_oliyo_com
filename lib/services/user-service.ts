@@ -1,7 +1,7 @@
 import { PrismaClient, User } from '@prisma/client';
 import { hashPassword, verifyPassword } from '../utils/auth';
 
-const prisma = new PrismaClient();
+
 
 export interface CreateUserInput {
   email: string;
@@ -19,6 +19,7 @@ export interface UpdateUserInput {
 }
 
 export class UserService {
+  constructor(private prisma: PrismaClient = new PrismaClient()) {}
   /**
    * Creates a new user with an initial credit balance of 100
    */
@@ -26,7 +27,7 @@ export class UserService {
     const { email, password, socialLoginProvider } = input;
     
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: { email }
     });
     
@@ -38,7 +39,7 @@ export class UserService {
     const hashedPassword = await hashPassword(password);
     
     // Create the user with initial 100 credits
-    const user = await prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email,
         passwordHash: hashedPassword,
@@ -56,7 +57,7 @@ export class UserService {
    * Finds a user by email
    */
   async findUserByEmail(email: string): Promise<User | null> {
-    return prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { email }
     });
   }
@@ -65,7 +66,7 @@ export class UserService {
    * Finds a user by ID
    */
   async findUserById(id: string): Promise<User | null> {
-    return prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { id }
     });
   }
@@ -86,13 +87,13 @@ export class UserService {
       return null;
     }
     
-    // Update last login time
-    await prisma.user.update({
+    // Update last login time并返回更新后的用户对象
+    const updated = await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLogin: new Date() }
     });
     
-    return user;
+    return updated;
   }
 
   /**
@@ -106,7 +107,7 @@ export class UserService {
       const passwordHash = await hashPassword(updateData.password);
       delete updateData.password;
       
-      return prisma.user.update({
+      return this.prisma.user.update({
         where: { id },
         data: {
           ...updateData,
@@ -115,7 +116,7 @@ export class UserService {
       });
     }
     
-    return prisma.user.update({
+    return this.prisma.user.update({
       where: { id },
       data: updateData
     });
@@ -125,7 +126,7 @@ export class UserService {
    * Updates user's credit balance by a specific amount
    */
   async updateUserCreditBalance(userId: string, amount: number): Promise<User> {
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId }
     });
     
@@ -136,7 +137,7 @@ export class UserService {
     // Ensure the new balance doesn't go below 0
     const newBalance = Math.max(0, user.creditBalance + amount);
     
-    return prisma.user.update({
+    return this.prisma.user.update({
       where: { id: userId },
       data: { creditBalance: newBalance }
     });
@@ -159,7 +160,7 @@ export class UserService {
    * Gets all users with optional pagination
    */
   async getAllUsers(limit?: number, offset?: number): Promise<User[]> {
-    return prisma.user.findMany({
+    return this.prisma.user.findMany({
       skip: offset || 0,
       take: limit || 50
     });

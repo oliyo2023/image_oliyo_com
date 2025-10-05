@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createMocks } from 'node-mocks-http';
-import { loginHandler } from '../../../pages/api/auth/login';
+import { loginHandler } from '../../src/lib/test-compat/loginHandler';
 
 describe('Contract Test: POST /api/auth/login', () => {
   it('should authenticate user and return session token', async () => {

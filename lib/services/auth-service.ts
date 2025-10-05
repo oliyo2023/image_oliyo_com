@@ -4,9 +4,6 @@ import { generateSessionToken, verifySessionToken, hashPassword, verifyPassword 
 import { Session } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-const userService = new UserService();
-
 export interface LoginInput {
   email: string;
   password: string;
@@ -30,6 +27,10 @@ export interface SessionInfo {
 }
 
 export class AuthService {
+  constructor(
+    public prisma: PrismaClient = new PrismaClient(),
+    public userService: UserService = new UserService()
+  ) {}
   /**
    * Authenticates a user and creates a session
    */
@@ -37,7 +38,7 @@ export class AuthService {
     const { email, password } = input;
     
     // Authenticate user
-    const user = await userService.authenticateUser(email, password);
+    const user = await this.userService.authenticateUser(email, password);
     
     if (!user) {
       return {
@@ -50,7 +51,7 @@ export class AuthService {
     const sessionToken = await generateSessionToken(user.id);
     
     // Store session in database
-    await prisma.session.create({
+    await this.prisma.session.create({
       data: {
         userId: user.id,
         sessionToken,
@@ -73,7 +74,7 @@ export class AuthService {
   async logout(sessionToken: string): Promise<LogoutResult> {
     try {
       // Get session from database
-      const session = await prisma.session.findUnique({
+      const session = await this.prisma.session.findUnique({
         where: { sessionToken }
       });
 
@@ -85,7 +86,7 @@ export class AuthService {
       }
 
       // Delete the session
-      await prisma.session.delete({
+      await this.prisma.session.delete({
         where: { sessionToken }
       });
 
@@ -107,7 +108,7 @@ export class AuthService {
   async verifySession(sessionToken: string): Promise<SessionInfo | null> {
     try {
       // Check if session exists in database and is not expired
-      const session = await prisma.session.findUnique({
+      const session = await this.prisma.session.findUnique({
         where: { sessionToken }
       });
 
@@ -136,7 +137,7 @@ export class AuthService {
     }
 
     // Create user via UserService
-    const user = await userService.createUser({
+    const user = await this.userService.createUser({
       email,
       password
     });
@@ -163,7 +164,7 @@ export class AuthService {
     }
 
     // Delete the old session
-    await prisma.session.delete({
+    await this.prisma.session.delete({
       where: { sessionToken }
     });
 
@@ -171,7 +172,7 @@ export class AuthService {
     const newSessionToken = await generateSessionToken(sessionInfo.userId);
     
     // Store the new session
-    await prisma.session.create({
+    await this.prisma.session.create({
       data: {
         userId: sessionInfo.userId,
         sessionToken: newSessionToken,

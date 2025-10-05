@@ -61,4 +61,5 @@ function getValidatedEnvironmentVariables() {
 }
 
 export { validateEnvironmentVariables, getValidatedEnvironmentVariables };
-export default { validateEnvironmentVariables, getValidatedEnvironmentVariables };
+const envUtils = { validateEnvironmentVariables, getValidatedEnvironmentVariables };
+export default envUtils;

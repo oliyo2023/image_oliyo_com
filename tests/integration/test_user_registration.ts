@@ -1,8 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createMocks } from 'node-mocks-http';
-import { registerHandler } from '../../../pages/api/auth/register';
-import { loginHandler } from '../../../pages/api/auth/login';
+import { registerHandler } from '../../src/lib/test-compat/registerHandler';
+import { loginHandler } from '../../src/lib/test-compat/loginHandler';
 
 describe('Integration Test: User Registration Workflow', () => {
   it('should complete full user registration and login workflow', async () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createMocks } from 'node-mocks-http';
-import { generateHandler } from '../../../pages/api/images/generate';
+import { generateHandler } from '../../src/lib/test-compat/generateHandler';
 
 describe('Contract Test: POST /api/images/generate', () => {
   it('should generate a new image from a text prompt using AI models', async () => {
