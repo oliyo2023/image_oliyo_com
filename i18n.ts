@@ -20,7 +20,8 @@ export default getRequestConfig(async ({ locale }) => {
 
   return {
     locale: validLocale,
-    messages: deepMerge(baseEn, current)
+    messages: deepMerge(baseEn, current),
+    timeZone: 'Asia/Shanghai'
   };
 });
 

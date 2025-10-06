@@ -21,8 +21,10 @@ export default function RootLayout({
 }) {
   return (
     <html>
-      <body className={inter.className}>
-        {children}
+      <body className={`${inter.className} min-h-[100dvh] bg-[#0F1115] text-[#E6E8EA] flex flex-col`}>
+        <div className="flex-1 flex flex-col">
+          {children}
+        </div>
       </body>
     </html>
   );

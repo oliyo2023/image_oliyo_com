@@ -76,7 +76,7 @@ export default function LanguageSelector() {
       {/* 触发按钮 */}
       <button
         type="button"
-        className="inline-flex items-center justify-center w-full px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ease-in-out"
+        className="inline-flex items-center justify-center w-full px-3 py-2 text-sm font-medium text-[#E6E8EA] bg-[#23262B] border border-[#2B3036] rounded-lg shadow-sm hover:bg-[#2B3036] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 ease-in-out"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -96,9 +96,9 @@ export default function LanguageSelector() {
 
       {/* 下拉菜单 */}
       <div
-        className={`absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 transition-all duration-200 ease-in-out ${
-          isOpen 
-            ? 'transform opacity-100 scale-100' 
+        className={`absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-lg bg-[#23262B] shadow-lg ring-1 ring-[#2B3036] transition-all duration-200 ease-in-out ${
+          isOpen
+            ? 'transform opacity-100 scale-100'
             : 'transform opacity-0 scale-95 pointer-events-none'
         }`}
         role="menu"
@@ -111,8 +111,8 @@ export default function LanguageSelector() {
               key={language.code}
               className={`group flex items-center w-full px-4 py-3 text-sm transition-colors duration-150 ease-in-out ${
                 currentLang === language.code
-                  ? 'bg-blue-50 text-blue-900 font-medium'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-emerald-500/20 text-emerald-400 font-medium'
+                  : 'text-[#E6E8EA] hover:bg-[#2B3036] hover:text-white'
               }`}
               role="menuitem"
               onClick={() => handleLanguageChange(language.code)}
@@ -122,7 +122,7 @@ export default function LanguageSelector() {
               </span>
               <span className="flex-1 text-left">{language.name}</span>
               {currentLang === language.code && (
-                <div className="w-2 h-2 bg-blue-500 rounded-full ml-2"></div>
+                <div className="w-2 h-2 bg-emerald-500 rounded-full ml-2"></div>
               )}
             </button>
           ))}

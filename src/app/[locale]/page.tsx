@@ -15,10 +15,6 @@ export default function Home() {
   const tCommon = useTranslations('Common');
   
   const navigationItems = [
-    { name: tCommon('home'), href: '/', description: tNav('home') },
-    { name: tCommon('signIn'), href: '/login', description: tNav('login') },
-    { name: tCommon('register'), href: '/register', description: tNav('register') },
-    { name: tCommon('dashboard'), href: '/dashboard', description: tNav('dashboard') },
     { name: tCommon('about'), href: '/about', description: tNav('about') },
     { name: tCommon('pricing'), href: '/pricing', description: tNav('pricing') },
     { name: tCommon('faq'), href: '/faq', description: tNav('faq') },
@@ -164,9 +160,9 @@ export default function Home() {
           </p>
         </div>
 
-        <div style={{ 
+        <div style={{
           backgroundColor: 'white',
-          borderRadius: '0.5rem',
+          borderRadius: '1rem',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
           padding: '2rem',
           marginBottom: '3rem'
@@ -175,10 +171,10 @@ export default function Home() {
             {t('availablePages')}
           </h2>
           
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-            gap: '1.5rem'
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '2rem'
           }}>
             {navigationItems.map((item) => (
               <NavigationCard 

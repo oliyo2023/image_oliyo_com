@@ -6,7 +6,8 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
-      "Bash(cmd /c \"taskkill /PID 11128 /F && taskkill /PID 16768 /F\")"
+      "Bash(cmd /c \"taskkill /PID 11128 /F && taskkill /PID 16768 /F\")",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
